@@ -14,20 +14,19 @@
 #include "unit.h"
 #include <iostream>
 // Konstanten
-const double FEHLERSCHRANKE = 1.0e-20;
-const double DBL_MAX_SQRT = sqrt(DBL_MAX) / 2;
+const double FEHLERSCHRANKE = 1.0e-60;
+const double DBL_MAX_SQRT = sqrt(DBL_MAX); // 1.0e20;
 
 // ===== Hauptprogramm =====
 
 int main()
 {
   // Hier kommt nun Ihr Programm; viel Erfolg!
-  //for(int i = 1; i <= AnzahlBeispiele; i++)
+  for(int i = 1; i <= AnzahlBeispiele; i++)
   {
   double a, b, c;
-  Start(7, a, b, c);
+  Start(i, a, b, c);
 
-  std::cout << a << " " << b << " " << c << std::endl;
 
   bool komplex = false;
   double nst1;
@@ -92,7 +91,7 @@ int main()
         else
             nst1 = -p/2 + pq_sqrt;
 
-        if(nst1 < FEHLERSCHRANKE) // falls x = 0 eine NST ist
+        if(std::abs(nst1) < FEHLERSCHRANKE) // falls x = 0 eine NST ist
             nst2 = nst1;
         else
             nst2 = q / nst1;
