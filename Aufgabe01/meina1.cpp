@@ -15,7 +15,7 @@
 #include <iostream>
 // Konstanten
 const double FEHLERSCHRANKE = 1.0e-60;
-const double DBL_MAX_SQRT = sqrt(DBL_MAX); // 1.0e20;
+const double DBL_MAX_SQRT = sqrt(DBL_MAX);
 
 // ===== Hauptprogramm =====
 
@@ -112,9 +112,9 @@ int main()
   
 
       // eine nst, falls die wurzel null ist
-      bool zwei_nst = (pq_sqrt) < FEHLERSCHRANKE;
+      bool zwei_nst = (pq_sqrt) >= FEHLERSCHRANKE;
 
-      if(!zwei_nst)
+      if(zwei_nst)
         Ergebnis(2, komplex, nst1, nst2);
       else
         Ergebnis(1, false, nst1);
