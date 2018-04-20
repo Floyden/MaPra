@@ -2,7 +2,16 @@
 
 void bubblesort(int*& feld, int length)
 {
-  
+	for(int pizza = 0; pizza < length; pizza++)
+	{
+		for(int roastbeef = 0 ; roastbeef < length - pizza - 1; roastbeef++)
+		{
+			if(feld[roastbeef] < feld[roastbeef + 1])
+			{
+                        	tausche(feld,roastbeef,roastbeef+1);
+			}
+		} 
+	}	
 }
 
 void insertionsort(int*& feld, int length)
@@ -70,11 +79,19 @@ void _mergeInner(int*& left, int lLength, int*& right, rLength)
 
 void mergesort(int*& feld, int length)
 {
+	_mergeInner(feld, length / 2, *(feld[length / 2]), (length + 1) / 2);
+}
 
+void _heapify(int *&feld, int length)
+{
+	for(int i = 0; i < length; i++)
+	{
+	}
 }
 
 void heapsort(int*& feld, int length)
 {
+	
 }
 
 void quicksort1(int*& feld, int length)
