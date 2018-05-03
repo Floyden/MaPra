@@ -47,49 +47,55 @@ void selectionsort(unsigned int*& feld, int length)
 
 void _mergeInner(unsigned int*& left, int lLength, unsigned int*& right, int rLength)
 {
-        //split
-        if(lLength > 2)
+    //split
+    if(lLength > 1)
     {
         unsigned int* _left = &(left[lLength / 2]);
         _mergeInner(left, lLength / 2, _left, (lLength + 1) / 2);
     }
-        if(rLength > 2)
+    if(rLength > 1)
     {
         unsigned int* _right = &(right[rLength / 2]);
-                _mergeInner(right, rLength / 2, _right, (rLength + 1) / 2);
+            _mergeInner(right, rLength / 2, _right, (rLength + 1) / 2);
     }
-        //merge
-        int* field = (int*) malloc((lLength + rLength) * sizeof(int));
 
-        int l = 0;
-        int r = 0;
-        while(l < lLength && r < rLength)
+    //merge
+    unsigned int* field = (unsigned int*) malloc((lLength + rLength) * sizeof(unsigned int));
+
+    int l = 0;
+    int r = 0;
+    while(l < lLength && r < rLength)
+    {
+        if(left[l] < right[r])
         {
-                if(left[l] < right[r])
-                {
-                        field[l + r] = left[l];
-                        l++;
-                }
-                else
-                {
-                        right[l + r] = right[r];
-                        r++;
-                }
+            field[l + r] = left[l];
+            l++;
         }
+        else
+        {
+            field[l + r] = right[r];
+            r++;
+        }
+    }
 
-        if(l != lLength)
-                memcpy(&(field[l + r]), &(left[l]), lLength - l);
-        else if(r != rLength)
-                memcpy(&(field[l + r]), &(right[r]), rLength - r);
+    if(l < lLength)
+    {
+        memcpy(&(field[l + r]), &(left[l]), (lLength - l) * sizeof(int));
+    }
+    else if(r < rLength)
+    {
+        memcpy(&(field[l + r]), &(right[r]), (rLength - r) * sizeof(int));
+    }
 
-        memcpy(left, field, lLength + rLength);
-        free(field);
+
+    memcpy(left, field, (lLength + rLength) * sizeof(int) );
+    free(field);
 }
 
 void mergesort(unsigned int*& feld, int length)
 {
     unsigned int* left = &(feld[length / 2]);
-        _mergeInner(feld, length / 2, left, (length + 1) / 2);
+    _mergeInner(feld, length / 2, left, (length + 1) / 2);
 }
 
 void _heapify(unsigned int*& feld, int length, int pos)
@@ -109,91 +115,118 @@ void _heapify(unsigned int*& feld, int length, int pos)
 
 void heapsort(unsigned int*& feld, int length)
 {
-        for(int i = 0; i < length; i++)
-                _heapify(feld, length - i, i);
-        for(int i = length - 1; i >= 0; i--)
-        {
-                tausche(feld, 0, i);
-                _heapify(feld, i, 0);
-        }
+    std::cout << "start" << '\n';
+    for(int i = 0; i < length; i++)
+        std::cout << feld[i] << " ";
+    std::cout << std::endl;
+
+    for(int i = 0; i < length; i++)
+            _heapify(feld, length - i, i);
+
+    std::cout << "heap" << '\n';
+    for(int i = 0; i < length; i++)
+        std::cout << feld[i] << " ";
+    std::cout << std::endl;
+
+    for(int i = length - 1; i >= 0; i--)
+    {
+            tausche(feld, 0, i);
+            _heapify(feld, i, 0);
+    }
+
+    std::cout << "sorted" << '\n';
+    for(int i = 0; i < length; i++)
+        std::cout << feld[i] << " ";
+    std::cout << std::endl;
 }
 
 void quicksort(unsigned int*& feld, int length)
 {
+    if(length <= 1)
+        return;
+
+    // std::cout << "start" << '\n';
+    // for(int i = 0; i < length; i++)
+    //     std::cout << feld[i] << " ";
+    // std::cout << std::endl;
+
     int pivot = length - 1;
-    int j;
-        for(int i = 0, j = length - 2; i < j; i++)
+    int i = 0;
+    int j = length - 2;
+    while(i < j)
     {
         if(feld[i] <= feld[pivot])
-            continue;
-        else
-        {
-            while(i < j)
-            {
-                if(feld[j] <= feld[pivot])
-                    break;
-                else
-                    j--;
-            }
+            i++;
+        else if(feld[j] > feld[pivot])
+            j--;
+        if(feld[i] > feld[pivot] && feld[j] <= feld[pivot])
             tausche(feld, i, j);
-        }
+
     }
-    tausche(feld, j, pivot);
+    if(feld[j] > feld[pivot])
+        tausche(feld, j, pivot);
+    else
+        j = pivot;
 
+    // std::cout << "sorted" << '\n';
+    // for(int i = 0; i < length; i++)
+    //     std::cout << feld[i] << " ";
+    // std::cout << std::endl;
+
+    unsigned int* left = &(feld[j + 1]);
     quicksort(feld, j);
-
-    unsigned int* left = &(feld[j]);
-    quicksort(left, length - j);
+    quicksort(left, length - j - 1);
 }
 
 void quicksortMedian(unsigned int*& feld, int length)
 {
+    if(length <= 1)
+        return;
+    else if(length == 2 && feld[0] > feld[1])
+    {
+        tausche(feld, 0, 1);
+        return;
+    }
+
+
     if(feld[0] > feld [length / 2])
         tausche(feld, 0, length/2);
     if(feld[length - 1] > feld [length / 2])
         tausche(feld, length / 2, length - 1);
 
     int pivot = length - 1;
-    int j;
-        for(int i = 0, j = length - 2; i < j; i++)
+    int i = 0;
+    int j = length - 2;
+    while(i < j)
     {
         if(feld[i] <= feld[pivot])
-            continue;
-        else
-        {
-            while(i < j)
-            {
-                if(feld[j] <= feld[pivot])
-                    break;
-                else
-                    j--;
-            }
+            i++;
+        else if(feld[j] > feld[pivot])
+            j--;
+        if(feld[i] > feld[pivot] && feld[j] <= feld[pivot])
             tausche(feld, i, j);
-        }
+
     }
-    tausche(feld, j, pivot);
+    if(feld[j] > feld[pivot])
+        tausche(feld, j, pivot);
+    else
+        j = pivot;
 
+    unsigned int* left = &(feld[j + 1]);
     quicksortMedian(feld, j);
-
-    unsigned int* left = &(feld[j]);
-    quicksortMedian(left, length - j);
+    quicksortMedian(left, length - j - 1);
 }
 
 int main()
 {
-    size_t length = 32;
+    size_t length = 16;
     unsigned int *feld;
 
-    start(1, length, feld);
 
-    for(int i = 0; i < length; i++)
-    std::cout << feld[i] << " ";
-    std::cout << std::endl;
-
-    selectionsort(feld, length);
-
-    for(int i = 0; i < length; i++)
-    std::cout << feld[i] << " ";
-    std::cout << std::endl;
-    ergebnis(feld);
+    for(int i = 1; i <= AnzahlBeispiele; i++)
+    {
+        start(i, length, feld);
+        mergesort(feld, length);
+        ergebnis(feld);
+    }
 }
