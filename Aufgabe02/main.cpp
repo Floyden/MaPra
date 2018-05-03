@@ -97,7 +97,7 @@ void mergesort(unsigned int*& feld, int length)
     unsigned int* left = &(feld[length / 2]);
     _mergeInner(feld, length / 2, left, (length + 1) / 2);
 }
-
+/*
 void _heapify(unsigned int*& feld, int length, int pos)
 {
         int next = 2 * pos + 1;
@@ -111,22 +111,45 @@ void _heapify(unsigned int*& feld, int length, int pos)
                 pos = next;
                 next = 2 * pos + 1;
         }
+}*/
+
+void _heapify(unsigned int*& feld, int length, int pos)
+{
+    int next = (pos * 2) + 1;
+    bool left = true; // if the left child is the bigger value
+
+    if(next >= length)
+        return;
+    else
+        _heapify(feld, length, next);
+
+    // std::cout << "next2: " << next << '\n';
+    if(next + 1 < length)
+    {
+        _heapify(feld, length, next + 1);
+        if(feld[next] < feld[next + 1])
+            left = false;
+    }
+
+    // std::cout << "Feld[" << pos << "]: " << feld[pos]
+    //         << ", Feld[" << next << "]: " << feld[next]
+    //         << ", Feld[" << next + 1 << "]: " << feld[next + 1]  << std::endl;
+    if(left && feld[pos] < feld[next])
+        tausche(feld, pos, next);
+    else if(!left && feld[pos] < feld[next + 1])
+        tausche(feld, pos, next + 1);
+
 }
 
 void heapsort(unsigned int*& feld, int length)
 {
-    std::cout << "start" << '\n';
-    for(int i = 0; i < length; i++)
-        std::cout << feld[i] << " ";
-    std::cout << std::endl;
+    // std::cout << "start" << '\n';
+    // for(int i = 0; i < length; i++)
+    //     std::cout << feld[i] << " ";
+    // std::cout << std::endl;
 
-    for(int i = 0; i < length; i++)
-            _heapify(feld, length - i, i);
+    _heapify(feld, length, 0);
 
-    std::cout << "heap" << '\n';
-    for(int i = 0; i < length; i++)
-        std::cout << feld[i] << " ";
-    std::cout << std::endl;
 
     for(int i = length - 1; i >= 0; i--)
     {
@@ -134,10 +157,10 @@ void heapsort(unsigned int*& feld, int length)
             _heapify(feld, i, 0);
     }
 
-    std::cout << "sorted" << '\n';
-    for(int i = 0; i < length; i++)
-        std::cout << feld[i] << " ";
-    std::cout << std::endl;
+    // std::cout << "sorted" << '\n';
+    // for(int i = 0; i < length; i++)
+    //     std::cout << feld[i] << " ";
+    // std::cout << std::endl;
 }
 
 void quicksort(unsigned int*& feld, int length)
@@ -168,10 +191,6 @@ void quicksort(unsigned int*& feld, int length)
     else
         j = pivot;
 
-    // std::cout << "sorted" << '\n';
-    // for(int i = 0; i < length; i++)
-    //     std::cout << feld[i] << " ";
-    // std::cout << std::endl;
 
     unsigned int* left = &(feld[j + 1]);
     quicksort(feld, j);
@@ -222,11 +241,59 @@ int main()
     size_t length = 16;
     unsigned int *feld;
 
+    std::cout << "Bubblesort:" << '\n';
+    for(int i = 1; i <= AnzahlBeispiele; i++)
+    {
+        start(i, length, feld);
+        bubblesort(feld, length);
+        ergebnis(feld);
+    }
 
+    std::cout << "Insertionsort:" << '\n';
+    for(int i = 1; i <= AnzahlBeispiele; i++)
+    {
+        start(i, length, feld);
+        insertionsort(feld, length);
+        ergebnis(feld);
+    }
+
+    std::cout << "Selectionsort:" << '\n';
+    for(int i = 1; i <= AnzahlBeispiele; i++)
+    {
+        start(i, length, feld);
+        selectionsort(feld, length);
+        ergebnis(feld);
+    }
+
+    std::cout << "Mergesort:" << '\n';
     for(int i = 1; i <= AnzahlBeispiele; i++)
     {
         start(i, length, feld);
         mergesort(feld, length);
+        ergebnis(feld);
+    }
+
+    std::cout << "Heapsort:" << '\n';
+    for(int i = 1; i <= AnzahlBeispiele; i++)
+    {
+        start(i, length, feld);
+        heapsort(feld, length);
+        ergebnis(feld);
+    }
+
+    std::cout << "Quicksort:" << '\n';
+    for(int i = 1; i <= AnzahlBeispiele; i++)
+    {
+        start(i, length, feld);
+        quicksort(feld, length);
+        ergebnis(feld);
+    }
+
+    std::cout << "Quicksort mit Median:" << '\n';
+    for(int i = 1; i <= AnzahlBeispiele; i++)
+    {
+        start(i, length, feld);
+        quicksortMedian(feld, length);
         ergebnis(feld);
     }
 }
