@@ -52,12 +52,25 @@ int main()
         selectionsort(strings);
         selectionsort(studenten);
     }
+    else if(input == "B")
+    {
+        bubblesort(doubles);
+        bubblesort(strings);
+        bubblesort(studenten);
+    }
+    else
+    {
+        mergesort(doubles);
+        mergesort(strings);
+        mergesort(studenten);
+    }
 
     auslesen(cout, doubles);
     auslesen(cout, strings);
     auslesen(cout, studenten);
 
     ergebnis(doubles);
-    ergebnis(strings);
+    const std::vector<std::string> feld = strings;
+    ergebnis(feld);
     ergebnis(studenten);
 }

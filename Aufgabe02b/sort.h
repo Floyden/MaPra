@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -18,10 +19,10 @@ void bubblesort(vector<T>& feld)
     {
         for(int roastbeef = 0 ; roastbeef < feld.size() - pizza - 1; roastbeef++)
         {
-            if(feld[roastbeef] > feld[roastbeef + 1])
+            if(feld[roastbeef + 1] < feld[roastbeef])
             {
-                swap(feld[roastbeef], feld[roastbeef + 1]);
-                    // tausche(feld,roastbeef,roastbeef+1);
+                // swap(feld[roastbeef], feld[roastbeef + 1]);
+                tausche(feld,roastbeef,roastbeef+1);
             }
         }
     }
@@ -54,11 +55,12 @@ void _mergeInner(T* left, int lLength, T* right, int rLength)
     if(rLength > 1)
     {
         T* _right = &(right[rLength / 2]);
-            _mergeInner(right, rLength / 2, _right, (rLength + 1) / 2);
+        _mergeInner(right, rLength / 2, _right, (rLength + 1) / 2);
     }
 
     //merge
-    T* field = (T*) malloc((lLength + rLength) * sizeof(unsigned int));
+    // T* field = (T*) malloc((lLength + rLength) * sizeof(T));
+    vector<T> field(lLength + rLength);
 
     int l = 0;
     int r = 0;
@@ -78,15 +80,21 @@ void _mergeInner(T* left, int lLength, T* right, int rLength)
 
     if(l < lLength)
     {
-        memcpy(&(field[l + r]), &(left[l]), (lLength - l) * sizeof(T));
+        // memcpy(&(field[l + r]), &(left[l]), (lLength - l) * sizeof(T));
+        for (size_t i = l + r; i < field.size(); i++)
+            field[i] = left[i - r];
     }
     else if(r < rLength)
     {
-        memcpy(&(field[l + r]), &(right[r]), (rLength - r) * sizeof(T));
+        // memcpy(&(field[l + r]), &(right[r]), (rLength - r) * sizeof(T));
+        for (size_t i = l + r; i < field.size(); i++)
+            field[i] = right[i - l];
     }
 
-    memcpy(left, field, (lLength + rLength) * sizeof(T));
-    free(field);
+    // memcpy(left, field, (lLength + rLength) * sizeof(T));
+    for (size_t i = 0; i < field.size(); i++)
+        left[i] = field[i];
+    // free(field);
 }
 
 template <class T>
