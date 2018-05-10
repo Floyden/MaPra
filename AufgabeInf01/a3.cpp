@@ -14,7 +14,21 @@
 // Probe
 
 lint PrimTest(lint n, const CSieb& Sieb)
-{ return 0; }
+{
+	if(Sieb[n])
+		return 1;
+
+	for(int i = 2; i < n; i++)
+	{
+		if(!Sieb[i])
+			continue;
+		if(!(n % i))
+			return i;
+	}
+	// Shouldn't be reached
+	std::cout << "PrimTest: Reached unreachable code\n";
+	return 0;
+}
 
 // Fermat
 
@@ -60,7 +74,7 @@ int main()
 	SiebTest(Sieb);
 
 	// PrimTest
-
+	
 	// Fermat-Test
 
 	// Miller-Rabin-Test
