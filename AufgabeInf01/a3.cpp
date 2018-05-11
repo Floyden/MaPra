@@ -81,13 +81,13 @@ lint gcd(lint a, lint b)
 
 void get_ds(lint n, lint& d, lint& s)
 {
-	d = n - 1;
+	
+	d = (n - 1) / 2;
 	for (s = 1; s < n; s++)
 	{
 		if(d % 2)
 			return;
 		d /= 2;
-		s++;
 	}
 }
 
