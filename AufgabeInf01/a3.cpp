@@ -150,7 +150,7 @@ int main()
 		lint val = HoleKandidaten(Test::MillerRabin, i);
 
 		bool prim = true;
-		for(int a = 0; prim && a <= MaxTestPrimzahl; a++)
+		for(int a = 0; prim && a < MaxTestPrimzahl; a++)
 		{
 			if(!Sieb[a] || gcd(a, val) != 1)
 				continue;
@@ -158,20 +158,6 @@ int main()
 			get_ds(val, d, s);
 
 			bool found = false;
-
-			// lint y = MillerRabinTest(val, a, d, 0);
-			// TestErgebnis(Test::MillerRabin, i, y, a, 0);
-			// if(y == 1 || y == val - 1)
-			// 	found = true;
-			// for(lint r = 1; !found && r < s ; r++)
-			// {
-			// 	lint y = MillerRabinTest(val, a, d, r);
-			// 	TestErgebnis(Test::MillerRabin, i, y, a, r);
-			// 	if(y == val - 1)
-			// 		found = true;
-			// 	if(y <= 1)
-			// 		break;
-			// }
 			for(lint r = 0; !found && r < s ; r++)
 			{
 				lint y = MillerRabinTest(val, a, d, r);
