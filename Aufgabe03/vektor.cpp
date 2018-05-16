@@ -6,6 +6,7 @@
 ***********************************************/
 
 #include "vektor.h"
+#include "matrix.h"
 #include <iomanip>
 #include <cmath>
 #include <cstdlib>
@@ -328,6 +329,31 @@ std::istream& operator >> (std::istream& s, Vektor& x)
 	s >> x(i);
   }
   return s;
+}
+
+Vektor operator * (const Matrix& m, const Vektor& v)
+{
+#ifndef NDEBUG
+    if (m.Spalten() != v.Laenge())
+        Vektor::VekFehler("Inkompatible Dimensionen fuer 'Matrix * Vektor'!");
+#endif
+    Vektor r(m.Zeilen());
+    for(size_t i = 0; i < m.Zeilen(); i++)
+        for(size_t j = 0; j < m.Spalten(); j++)
+            r(i) += m(i,j) * v(j);
+    return r;
+}
+Vektor operator * (const Vektor& v, const Matrix& m)
+{
+#ifndef NDEBUG
+    if (m.Zeilen() != v.Laenge())
+        Vektor::VekFehler("Inkompatible Dimensionen fuer 'Vektor * Matrix'!");
+#endif
+    Vektor r(m.Spalten());
+    for(size_t i = 0; i < m.Spalten(); i++)
+        for(size_t j = 0; j < m.Zeilen(); j++)
+            r(i) += m(j,i) * v(j);
+    return r;
 }
 
 

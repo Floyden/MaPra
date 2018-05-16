@@ -17,7 +17,7 @@ class Matrix
     ~Matrix () {};                        // Destruktor
     Matrix  (const Matrix&);              // Kopierkonstruktor
 
-    double& operator () (size_t, size_t);         // Zugriff auf Einträge des Vektors
+    double& operator () (size_t, size_t);         // Zugriff auf Einträge der Matrix
     double  operator () (size_t, size_t) const;   // Zugriff auf falls Vektor const
 
     Matrix& operator =  (const Matrix&);  // Zuweisung
@@ -27,8 +27,8 @@ class Matrix
     Matrix& operator /= (const double);
 
     Matrix& ReDim   (size_t, size_t);                   // neue Laenge festlegen
-    size_t  Zeilen  () const { return Mat.size(); }  // Laenge
-    size_t  Spalten  () const { return Mat[0].Laenge(); }  // Laenge
+    size_t  Spalten  () const { return Mat.size(); }  // Laenge
+    size_t  Zeilen  () const { return Mat[0].Laenge(); }  // Laenge
     // double  Norm2   () const;                   // Euklidische Norm des Vektors
     // double  NormMax () const;                   // Maximum-Norm des Vektors
     //
@@ -41,19 +41,12 @@ class Matrix
     Matrix   operator -  (const Matrix&); // Subtraktion
     Matrix   operator -  ();                // Vorzeichen
 
+    friend Matrix   operator *  (const Matrix&, const Matrix&); // Matrix-Matrix-
     friend Matrix   operator *  (const double,  const Matrix&); // Vielfache
     friend Matrix   operator *  (const Matrix&, const double);
     friend Matrix   operator /  (const Matrix&, const double);
-    // friend double   dot         (const Vektor&, const Vektor&); // Skalarprodukt
-    //
-    // friend bool     operator == (const Vektor&, const Vektor&); // Vergleich
-    // friend bool     operator != (const Vektor&, const Vektor&);
-    //
     // friend std::istream& operator >> (std::istream&, Vektor&);       // Eingabe
     // friend std::ostream& operator << (std::ostream&, const Vektor&); // Ausgabe
-    //
-    // friend Vektor   operator *  (const Matrix&, const Vektor&); // Matrix-Vektor-
-    // friend Vektor   operator *  (const Vektor&, const Matrix&); // Multiplikation
 };
 
 #endif

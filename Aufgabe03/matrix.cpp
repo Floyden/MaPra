@@ -41,8 +41,8 @@ Matrix& Matrix::operator =  (const Matrix& mat)
         MatFehler("Inkompatible Dimensionen fuer 'Matrix = Matrix'!");
 #endif
 
-    for (size_t i = 0; i < Spalten(); i++)
-        for (size_t j = 0; j < Zeilen(); j++)
+    for (size_t i = 0; i < Zeilen(); i++)
+        for (size_t j = 0; j < Spalten(); j++)
             (*this) (i,j) = mat(i, j);
 
   //oder: this->Vek=x.Vek;
@@ -58,8 +58,8 @@ Matrix& Matrix::operator += (const Matrix& mat)
         MatFehler("Inkompatible Dimensionen fuer 'Matrix += Matrix'!");
 #endif
 
-    for (size_t i = 0; i < Spalten(); i++)
-        for (size_t j = 0; j < Zeilen(); j++)
+    for (size_t i = 0; i < Zeilen(); i++)
+        for (size_t j = 0; j < Spalten(); j++)
             (*this) (i,j) += mat(i, j);
 
     return *this;
@@ -72,8 +72,8 @@ Matrix& Matrix::operator -= (const Matrix& mat)
         MatFehler("Inkompatible Dimensionen fuer 'Matrix -= Matrix'!");
 #endif
 
-    for (size_t i = 0; i < Spalten(); i++)
-        for (size_t j = 0; j < Zeilen(); j++)
+    for (size_t i = 0; i < Zeilen(); i++)
+        for (size_t j = 0; j < Spalten(); j++)
             (*this) (i,j) -= mat(i, j);
 
     return *this;
@@ -81,8 +81,8 @@ Matrix& Matrix::operator -= (const Matrix& mat)
 
 Matrix& Matrix::operator *= (const double x)
 {
-    for (size_t i = 0; i < Spalten(); i++)
-        for (size_t j = 0; j < Zeilen(); j++)
+    for (size_t i = 0; i < Zeilen(); i++)
+        for (size_t j = 0; j < Spalten(); j++)
             (*this) (i,j) *= x;
 
     return *this;
@@ -90,8 +90,8 @@ Matrix& Matrix::operator *= (const double x)
 
 Matrix& Matrix::operator /= (const double x)
 {
-    for (size_t i = 0; i < Spalten(); i++)
-        for (size_t j = 0; j < Zeilen(); j++)
+    for (size_t i = 0; i < Zeilen(); i++)
+        for (size_t j = 0; j < Spalten(); j++)
             (*this) (i,j) /= x;
 
     return *this;
@@ -169,6 +169,19 @@ Matrix Matrix::operator-()
     return t *= -1.0;
 }
 
+Matrix operator * (const Matrix& a, const Matrix& b)
+{
+#ifndef NDEBUG
+  if (a.Spalten() != b.Zeilen())
+    Matrix::MatFehler("Inkompatible Dimensionen fuer 'Matrix * Matrix'!");
+#endif
+    Matrix r(a.Zeilen(), b.Spalten());
+    for(size_t i = 0; i < a.Zeilen(); i++)
+        for(size_t j = 0; j < b.Spalten(); j++)
+            for(size_t k = 0; k < b.Zeilen(); k++)
+                r(i,j) += a(i,k) * b(k,j);
+    return r;
+}
 
 Matrix operator * (const double x,  const Matrix& m)
 {

@@ -264,40 +264,40 @@ int main()
     if (A.Spalten()!=Big2) Matrix::MatFehler("Fehler bei der Spaltenbestimmung!");
   }
 
-  // cout << " Ok.\n\nZum Schluss wird die Matrix--Vektor--Multiplikation getestet:" << endl;
-  // {
-  //   size_t i,j;
-  //   Matrix A(Big1,Big2), B(Big2,3), C(Big1,3);
-  //   Vektor x(Big2), y(Big1);
-  //
-  //   for (i=0; i<Big1; i++)
-  //     for (j=0; j<Big2; j++)
-  //       A(i,j)=i+2.*j+3.;
-  //   for (i=0; i<Big2; i++)
-  //     for (j=0; j<3; j++)
-  //       B(i,j)=3.*i-2.*j-1.;
-  //   for (i=0; i<Big2; i++)
-  //     x(i)=0.5*i;
-  //   cout << "\nMatrix * Vektor." << flush;
-  //
-  //   y=A*x;
-  //   for (i=0; i<Big1; i++)
-  //     if (fabs(y(i)-3.*i-23.)>eps) Vektor::VekFehler("Fehler bei Matrix * Vektor!");
-  //   cout << " Ok.\nVektor * Matrix." << flush;
-  //
-  //   for (i=0; i<Big1; i++)
-  //     y(i)=1.5*i;
-  //
-  //   x=y*A;
-  //   for (i=0; i<Big2; i++)
-  //     if (fabs(x(i)-374250.*i-62874000.)>eps) Vektor::VekFehler("Fehler bei Vektor * Matrix!");
-  //   cout << " Ok.\nMatrix * Matrix." << flush;
-  //
-  //   C=A*B;
-  //   for (i=0; i<Big1; i++)
-  //     for (j=0; j<3; j++)
-  //       if (fabs(C(i,j)-14.*i+8.*i*j+48.*j-114.)>eps) Matrix::MatFehler("Fehler bei Matrix * Matrix!");
-  // }
+  cout << " Ok.\n\nZum Schluss wird die Matrix--Vektor--Multiplikation getestet:" << endl;
+  {
+    size_t i,j;
+    Matrix A(Big1,Big2), B(Big2,3), C(Big1,3);
+    Vektor x(Big2), y(Big1);
+
+    for (i=0; i<Big1; i++)
+      for (j=0; j<Big2; j++)
+        A(i,j)=i+2.*j+3.;
+    for (i=0; i<Big2; i++)
+      for (j=0; j<3; j++)
+        B(i,j)=3.*i-2.*j-1.;
+    for (i=0; i<Big2; i++)
+      x(i)=0.5*i;
+    cout << "\nMatrix * Vektor." << flush;
+
+    y=A*x;
+    for (i=0; i<Big1; i++)
+      if (fabs(y(i)-3.*i-23.)>eps) Vektor::VekFehler("Fehler bei Matrix * Vektor!");
+    cout << " Ok.\nVektor * Matrix." << flush;
+
+    for (i=0; i<Big1; i++)
+      y(i)=1.5*i;
+
+    x=y*A;
+    for (i=0; i<Big2; i++)
+      if (fabs(x(i)-374250.*i-62874000.)>eps) Vektor::VekFehler("Fehler bei Vektor * Matrix!");
+    cout << " Ok.\nMatrix * Matrix." << flush;
+
+    C=A*B;
+    for (i=0; i<Big1; i++)
+      for (j=0; j<3; j++)
+        if (fabs(C(i,j)-14.*i+8.*i*j+48.*j-114.)>eps) Matrix::MatFehler("Fehler bei Matrix * Matrix!");
+  }
 
   cout << " Ok.\n\nAlle Tests bestanden!" << endl;
 
