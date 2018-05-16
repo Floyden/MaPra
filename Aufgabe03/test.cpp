@@ -218,15 +218,15 @@ int main()
         if (fabs(C(i,j)-23*i+40.6-0.5*j)>eps) Matrix::MatFehler("Fehler bei der Addition!");
     cout << " Ok.\nMatrizen subtrahieren." << flush;
 
-    // C=A-B;
-    // for (i=0; i<Big1; i++)
-    //   for (j=0; j<Big2; j++)
-    //     if (fabs(C(i,j)+8*i+12.2+0.2*j)>eps)
-    //     {
-    //         std::cout << '\n' << fabs(C(i,j)+8*i+12.2+0.2*j)  << " = " << A(i,j) << " - " << B(i,j)<< '\n';
-    //         Matrix::MatFehler("Fehler bei der Subtraktion!");
-    //     }
-    // cout << " Ok.\nMatrix erniedrigen." << flush;
+    C=A-B;
+    for (i=0; i<Big1; i++)
+      for (j=0; j<Big2; j++)
+        if (fabs(C(i,j)+8*i+12.2+0.2*j)>eps)
+        {
+            std::cout << '\n' << fabs(C(i,j)+8*i+12.2+0.2*j)  << " = " << A(i,j) << " - " << B(i,j)<< '\n';
+            Matrix::MatFehler("Fehler bei der Subtraktion!");
+        }
+    cout << " Ok.\nMatrix erniedrigen." << flush;
 
     C-=A;
     for (i=0; i<Big1; i++)
@@ -240,28 +240,28 @@ int main()
         if (fabs(C(i,j)+5*i-17.6+0.1*j)>eps) Matrix::MatFehler("Fehler beim Vorzeichenwechsel!");
     cout << " Ok.\nMatrix skalieren." << flush;
 
-  //   C=1.1*B;
-  //   for (i=0; i<Big1; i++)
-  //     for (j=0; j<Big2; j++)
-  //       if (fabs(C(i,j)-14.3*i+5.94-0.33*j)>eps) Matrix::MatFehler("Fehler beim Skalieren!");
-  //   cout << " Ok.\nNochmal skalieren." << flush;
-  //
-  //   C=A*3.0;
-  //   for (i=0; i<Big1; i++)
-  //     for (j=0; j<Big2; j++)
-  //       if (fabs(C(i,j)-15*i+52.8-0.3*j)>eps) Matrix::MatFehler("Fehler beim Skalieren!");
-  //   cout << " Ok.\nEin letztes Mal skalieren." << flush;
-  //
-  //   C=B/0.5;
-  //   for (i=0; i<Big1; i++)
-  //     for (j=0; j<Big2; j++)
-  //       if (fabs(C(i,j)-26*i+10.8-0.6*j)>eps) Matrix::MatFehler("Fehler beim Skalieren!");
-  //
-  //   cout << " Ok.\nZeilen." << flush;
-  //   if (A.Zeilen()!=Big1) Matrix::MatFehler("Fehler bei der Zeilenbestimmung!");
-  //
-  //   cout << " Ok.\nSpalten." << flush;
-  //   if (A.Spalten()!=Big2) Matrix::MatFehler("Fehler bei der Spaltenbestimmung!");
+    C=1.1*B;
+    for (i=0; i<Big1; i++)
+      for (j=0; j<Big2; j++)
+        if (fabs(C(i,j)-14.3*i+5.94-0.33*j)>eps) Matrix::MatFehler("Fehler beim Skalieren!");
+    cout << " Ok.\nNochmal skalieren." << flush;
+
+    C=A*3.0;
+    for (i=0; i<Big1; i++)
+      for (j=0; j<Big2; j++)
+        if (fabs(C(i,j)-15*i+52.8-0.3*j)>eps) Matrix::MatFehler("Fehler beim Skalieren!");
+    cout << " Ok.\nEin letztes Mal skalieren." << flush;
+
+    C=B/0.5;
+    for (i=0; i<Big1; i++)
+      for (j=0; j<Big2; j++)
+        if (fabs(C(i,j)-26*i+10.8-0.6*j)>eps) Matrix::MatFehler("Fehler beim Skalieren!");
+
+    cout << " Ok.\nZeilen." << flush;
+    if (A.Zeilen()!=Big1) Matrix::MatFehler("Fehler bei der Zeilenbestimmung!");
+
+    cout << " Ok.\nSpalten." << flush;
+    if (A.Spalten()!=Big2) Matrix::MatFehler("Fehler bei der Spaltenbestimmung!");
   }
 
   // cout << " Ok.\n\nZum Schluss wird die Matrix--Vektor--Multiplikation getestet:" << endl;

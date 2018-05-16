@@ -101,44 +101,91 @@ Matrix& Matrix::operator /= (const double x)
 Matrix& Matrix::ReDim (size_t l, size_t m)
 {
 #ifndef NDEBUG
-  if (l <= 0)
-    MatFehler("Nur Vektoren mit positiver Laenge!");
+    if (l <= 0)
+        MatFehler("Nur Vektoren mit positiver Laenge!");
 #endif
 
-  Mat.clear();
-  for(auto& vec: Mat)
-    vec.ReDim(l);
-  Mat.resize(m, Vektor(l));
+    Mat.clear();
+    for(auto& vec: Mat)
+        vec.ReDim(l);
+    Mat.resize(m, Vektor(l));
 
-  return *this;
+    return *this;
+}
+
+Matrix operator + (const Matrix& a, const Matrix& b)
+{
+#ifndef NDEBUG
+  if (a.Zeilen() != b.Zeilen() || a.Spalten() != b.Spalten())
+    Matrix::MatFehler("Inkompatible Dimensionen fuer 'Matrix + Matrix'!");
+#endif
+
+    Matrix c = a;
+    return c += b;
+}
+
+Matrix operator - (const Matrix& a, const Matrix& b)
+{
+#ifndef NDEBUG
+  if (a.Zeilen() != b.Zeilen() || a.Spalten() != b.Spalten())
+    Matrix::MatFehler("Inkompatible Dimensionen fuer 'Matrix - Matrix'!");
+#endif
+
+    Matrix c = a;
+    return c -= b;
+}
+
+Matrix operator-(const Matrix& a)
+{
+    Matrix t = a;
+    return t *= -1.0;
 }
 
 Matrix Matrix::operator + (const Matrix& a)
 {
 #ifndef NDEBUG
   if (a.Zeilen() != Zeilen() || a.Spalten() != Spalten())
-    MatFehler("Inkompatible Dimensionen fuer 'Matrix + Matrix'!");
+    Matrix::MatFehler("Inkompatible Dimensionen fuer 'Matrix + Matrix'!");
 #endif
 
-    Matrix b = a;
-    return b += (*this);
+    Matrix c = a;
+    return c += *this;
 }
 
 Matrix Matrix::operator - (const Matrix& a)
 {
 #ifndef NDEBUG
   if (a.Zeilen() != Zeilen() || a.Spalten() != Spalten())
-    MatFehler("Inkompatible Dimensionen fuer 'Matrix - Matrix'!");
+    Matrix::MatFehler("Inkompatible Dimensionen fuer 'Matrix - Matrix'!");
 #endif
 
-    Matrix b = a;
-    return b -= (*this);
+    Matrix c = *this;
+    return c -= a;
 }
 
-Matrix Matrix::operator- ()
+Matrix Matrix::operator-()
 {
     Matrix t = *this;
     return t *= -1.0;
+}
+
+
+Matrix operator * (const double x,  const Matrix& m)
+{
+    Matrix t = m;
+    return t *= x;
+}
+
+Matrix operator * (const Matrix& m, const double x)
+{
+    Matrix t = m;
+    return t *= x;
+}
+
+Matrix operator / (const Matrix& m, const double x)
+{
+    Matrix t = m;
+    return t /= x;
 }
 
 void Matrix::MatFehler (const std::string& str)

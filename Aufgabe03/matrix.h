@@ -34,13 +34,16 @@ class Matrix
     //
     static void MatFehler (const std::string& str);   // Fehlermeldung ausgeben
 
+    friend Matrix   operator +  (const Matrix&, const Matrix&); // Addition
+    friend Matrix   operator -  (const Matrix&, const Matrix&); // Subtraktion
+    friend Matrix   operator -  (const Matrix&);                // Vorzeichen
     Matrix   operator +  (const Matrix&); // Addition
     Matrix   operator -  (const Matrix&); // Subtraktion
     Matrix   operator -  ();                // Vorzeichen
 
-    // friend Vektor   operator *  (const double,  const Vektor&); // Vielfache
-    // friend Vektor   operator *  (const Vektor&, const double);
-    // friend Vektor   operator /  (const Vektor&, const double);
+    friend Matrix   operator *  (const double,  const Matrix&); // Vielfache
+    friend Matrix   operator *  (const Matrix&, const double);
+    friend Matrix   operator /  (const Matrix&, const double);
     // friend double   dot         (const Vektor&, const Vektor&); // Skalarprodukt
     //
     // friend bool     operator == (const Vektor&, const Vektor&); // Vergleich
