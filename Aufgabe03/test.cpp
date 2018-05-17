@@ -8,6 +8,7 @@
 
 #include "vektor.h"
 #include "matrix.h"
+#include "unit.h"
 #include <cmath>
 #include <iostream>
 
@@ -16,11 +17,93 @@ using namespace std;
 const size_t BigLen=1000, SmallLen=10, Big1=500, Big2=4;
 const double eps=1e-11;
 
-int main()
+Vektor Jacobi(Matrix A, Vektor x0, Vektor b, double tol, int& maxiter)
 {
-  size_t i, j;
+    Vektor xn = x0;
+    int k;
+    for(k = 0; k < maxiter; k++)
+    {
+        Vektor xn1(xn.Laenge());
+        for (size_t i = 0; i < xn.Laenge(); i++)
+        {
+            double sum = 0;
+            for (size_t j = 0; j < xn.Laenge(); j++)
+            {
+                if(i != j)
+                    sum += A(i,j)*xn(j);
+            }
+            xn1(i) = (b(i) - sum) / A(i,i);
+        }
+        if((xn1 - xn).Norm2() / b.Norm2() <= tol)
+        {
+            maxiter = k;
+            return xn;
+        }
+        xn = xn1;
+    }
+    maxiter = k;
+    return xn;
+}
 
-  cout << "\nDieses Programm ueberprueft in gewissen Grenzen die Funktionalitaet einiger"
+Vektor Gauss_Seidel(Matrix A, Vektor x0, Vektor b, double tol, int& maxiter)
+{
+    Vektor xn = x0;
+    int k;
+    for(k = 0; k < maxiter; k++)
+    {
+        Vektor xn1(xn.Laenge());
+        for (size_t i = 0; i < xn.Laenge(); i++)
+        {
+            double sum = 0;
+            for (size_t j = 0; j < i; j++)
+            {
+                sum += A(i,j)*xn1(j);
+            }
+            for (size_t j = i + 1; j < xn.Laenge(); j++)
+            {
+                sum += A(i,j)*xn(j);
+            }
+            xn1(i) = (b(i) - sum) / A(i,i);
+        }
+        if((xn1 - xn).Norm2() / b.Norm2() <= tol)
+        {
+            maxiter = k;
+            return xn;
+        }
+
+        xn = xn1;
+    }
+    maxiter = k;
+    return xn;
+}
+
+Vektor CG(Matrix A, Vektor x0, Vektor b, double tol, int& maxiter)
+{
+    Vektor xn = x0;
+    Vektor r = b - A * x0;
+    Vektor p = r;
+    double g = dot(r, r);
+    int k;
+    for(k = 0; k < maxiter && r.Norm2() / b.Norm2() > tol ; k++)
+    {
+        Vektor q = A * p;
+        double a = g / dot(q, p);
+        Vektor xn1 = xn + a * p;
+        r = r - a * q;
+        double g2 = dot(r, r);
+        p = r + (g2* p) / g;
+        g  = g2;
+        xn = xn1;
+    }
+    maxiter = k;
+    return xn;
+}
+
+int main(int argc, char *argv[])
+{
+    size_t i, j;
+
+    cout << "\nDieses Programm ueberprueft in gewissen Grenzen die Funktionalitaet einiger"
        << "\nFunktionen Ihrer Vektor-/Matrixklasse. Nach jedem einzelnen Test sollte die"
        << "\nMeldung 'Ok.' erscheinen. Zum Schluss sollten Sie die Meldung 'Alle Tests"
        << "\nbestanden!' erhalten. Andernfalls gab es irgendwo Probleme. Alle Tests sind"
@@ -33,14 +116,14 @@ int main()
        << "\nFehler (z.B. negative Indizes) abfangen."
        << "\nViel Glueck! :-)";
 
-  cout << "\n\nZunaechst wird die Vektorklasse getestet:\n\n"
+    cout << "\n\nZunaechst wird die Vektorklasse getestet:\n\n"
        << "Vektoren erzeugen und wieder loeschen." << flush;
 
-  for (i=0; i<1000; i++)
-  { Vektor x(i+1); }
+    for (i=0; i<1000; i++)
+    { Vektor x(i+1); }
 
-  cout << " Ok.\nVektorelemente schreiben und lesen." << flush;
-  {
+    cout << " Ok.\nVektorelemente schreiben und lesen." << flush;
+    {
     Vektor x(BigLen), y(SmallLen);
 
     for (i=0; i<BigLen; i++)
@@ -52,13 +135,13 @@ int main()
       if (fabs(x(i)-2*i-0.5)>eps) Vektor::VekFehler("Falsche Vektorelemente");
     for (i=0; i<SmallLen; i++)
       if (fabs(y(i)-3*i-0.7)>eps) Vektor::VekFehler("Falsche Vektorelemente");
-  }
+    }
 
-  cout << " Ok.\nFeld von Vektoren erzeugen." << flush;
-  { Vektor x[10]; }
+    cout << " Ok.\nFeld von Vektoren erzeugen." << flush;
+    { Vektor x[10]; }
 
-  cout << " Ok.\nVektor neu dimensionieren." << flush;
-  {
+    cout << " Ok.\nVektor neu dimensionieren." << flush;
+    {
     Vektor x;
     for (i=1; i<BigLen; i++)
     {
@@ -67,10 +150,10 @@ int main()
       if (fabs(x(i)-6*i+1.3)>eps || x(i-1)!=0)
         Vektor::VekFehler("Fehler im redimensionierten Vektor!");
     }
-  }
+    }
 
-  cout << " Ok.\nVektor zuweisen." << flush;
-  {
+    cout << " Ok.\nVektor zuweisen." << flush;
+    {
     Vektor x(BigLen), y(BigLen);
 
     for (i=0; i<BigLen; i++)
@@ -79,10 +162,10 @@ int main()
     y=x;
     for (i=0; i<BigLen; i++)
       if (fabs(y(i)-0.5*i-0.8)>eps) Vektor::VekFehler("Falsche Vektorelemente");
-  }
+    }
 
-  cout << " Ok.\nVektoren addieren." << flush;
-  {
+    cout << " Ok.\nVektoren addieren." << flush;
+    {
     Vektor x(BigLen), y(BigLen), z(BigLen);
 
     for (i=0; i<BigLen; i++)
@@ -139,17 +222,17 @@ int main()
 
     cout << " Ok.\nEuklidische Norm." << flush;
     if (fabs(x.Norm2()-91089.1361)>1e-4) Vektor::VekFehler("Fehler bei der Euklidischen Norm!");
-  }
+    }
 
-  cout << " Ok.\n\nJetzt wird die Matrixklasse getestet:\n\n"
+    cout << " Ok.\n\nJetzt wird die Matrixklasse getestet:\n\n"
        << "Matrizen erzeugen und wieder loeschen." << flush;
 
-  for (i=0; i<Big1; i++)
+    for (i=0; i<Big1; i++)
     for (j=0; j<Big2; j++)
     { Matrix A(i+1,j+1); }
 
-  cout << " Ok.\nMatrixelemente schreiben und lesen." << flush;
-  {
+    cout << " Ok.\nMatrixelemente schreiben und lesen." << flush;
+    {
     Matrix A(Big1,Big2), B(Big2,Big1);
 
     for (i=0; i<Big1; i++)
@@ -165,13 +248,13 @@ int main()
     for (i=0; i<Big2; i++)
       for (j=0; j<Big1; j++)
         if (fabs(B(i,j)-3*i-0.7+j)>eps) Matrix::MatFehler("Falsche Matrixelemente");
-  }
+    }
 
-  cout << " Ok.\nFeld von Matrizen erzeugen." << flush;
-  { Matrix A[10]; }
+    cout << " Ok.\nFeld von Matrizen erzeugen." << flush;
+    { Matrix A[10]; }
 
-  cout << " Ok.\nMatrix neu dimensionieren." << flush;
-  {
+    cout << " Ok.\nMatrix neu dimensionieren." << flush;
+    {
     Matrix A;
 
     for (i=0; i<Big1; i++)
@@ -182,10 +265,10 @@ int main()
         if (fabs(A(i,j)-6*i+1.3-1.3*j)>eps)
           Matrix::MatFehler("Fehler im redimensionierten Matrix!");
       }
-  }
+    }
 
-  cout << " Ok.\nMatrix zuweisen." << flush;
-  {
+    cout << " Ok.\nMatrix zuweisen." << flush;
+    {
     Matrix A(Big1,Big2), B(Big1,Big2);
 
     for (i=0; i<Big1; i++)
@@ -196,10 +279,10 @@ int main()
     for (i=0; i<Big1; i++)
       for (j=0; j<Big2; j++)
         if (fabs(B(i,j)-0.5*i-0.8+0.3*j)>eps) Matrix::MatFehler("Falsche Matrixelemente");
-  }
+    }
 
-  cout << " Ok.\nMatrizen addieren." << flush;
-  {
+    cout << " Ok.\nMatrizen addieren." << flush;
+    {
     Matrix A(Big1,Big2), B(Big1,Big2), C(Big1,Big2);
 
     for (i=0; i<Big1; i++)
@@ -262,10 +345,10 @@ int main()
 
     cout << " Ok.\nSpalten." << flush;
     if (A.Spalten()!=Big2) Matrix::MatFehler("Fehler bei der Spaltenbestimmung!");
-  }
+    }
 
-  cout << " Ok.\n\nZum Schluss wird die Matrix--Vektor--Multiplikation getestet:" << endl;
-  {
+    cout << " Ok.\n\nZum Schluss wird die Matrix--Vektor--Multiplikation getestet:" << endl;
+    {
     size_t i,j;
     Matrix A(Big1,Big2), B(Big2,3), C(Big1,3);
     Vektor x(Big2), y(Big1);
@@ -297,9 +380,68 @@ int main()
     for (i=0; i<Big1; i++)
       for (j=0; j<3; j++)
         if (fabs(C(i,j)-14.*i+8.*i*j+48.*j-114.)>eps) Matrix::MatFehler("Fehler bei Matrix * Matrix!");
-  }
+    }
 
   cout << " Ok.\n\nAlle Tests bestanden!" << endl;
 
+  if(argc == 1)
+  {
+    cout << "too few args\n";
+    return 1;
+  }
+
+  if(argv[1][0] == '0')
+  {
+      std::cout << "\n\n Teste Jakobi\n";
+
+      for (int i = 1; i <= AnzahlBeispiele; i++) {
+          Matrix A;
+          Vektor x0;
+          Vektor b;
+          double tol;
+          int maxiter;
+
+          Start (i, A, x0, b, tol, maxiter);
+          auto x = Jacobi(A, x0, b, tol, maxiter);
+          Ergebnis ( x,  maxiter, 0);
+      }
+  }
+  else if(argv[1][0] == '1')
+  {
+      std::cout << "\n\n Teste Gauss-Seidel\n";
+
+      for (int i = 1; i <= AnzahlBeispiele; i++) {
+          Matrix A;
+          Vektor x0;
+          Vektor b;
+          double tol;
+          int maxiter;
+
+          Start (i, A, x0, b, tol, maxiter);
+          auto x = Gauss_Seidel(A, x0, b, tol, maxiter);
+          Ergebnis ( x,  maxiter, 1);
+      }
+  }
+  else if(argv[1][0] == '2')
+  {
+      std::cout << "\n\n Teste CG\n";
+
+      for (int i = 1; i <= AnzahlBeispiele; i++) {
+          Matrix A;
+          Vektor x0;
+          Vektor b;
+          double tol;
+          int maxiter;
+
+          Start (i, A, x0, b, tol, maxiter);
+          auto x = CG(A, x0, b, tol, maxiter);
+          Ergebnis ( x,  maxiter, 2);
+      }
+  }
+  else
+  {
+      std::cout << "wrong args" << '\n';
+      return 1;
+  }
   return 0;
 }

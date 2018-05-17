@@ -1,6 +1,6 @@
 CXXFLAGS = -O2 -Wall
 
-test: vektor.o matrix.o test.o
+test: vektor.o matrix.o test.o unit.o
 	$(CXX) -no-pie $(CXXFLAGS) -o $@ $^
 
 vektor.o: vektor.cpp vektor.h
