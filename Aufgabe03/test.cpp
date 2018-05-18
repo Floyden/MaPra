@@ -11,6 +11,9 @@
 #include "unit.h"
 #include <cmath>
 #include <iostream>
+#include <ostream>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -19,10 +22,15 @@ const double eps=1e-11;
 
 Vektor Jacobi(Matrix A, Vektor x0, Vektor b, double tol, int& maxiter)
 {
+    std::ofstream ofs("jacobi.txt",std::ios::out);
+    vector<double> res;
+
     Vektor xn = x0;
     int k;
     for(k = 0; k < maxiter; k++)
     {
+        res.push_back(xn.Norm2() / b.Norm2());
+
         Vektor xn1(xn.Laenge());
         for (size_t i = 0; i < xn.Laenge(); i++)
         {
@@ -34,23 +42,30 @@ Vektor Jacobi(Matrix A, Vektor x0, Vektor b, double tol, int& maxiter)
             }
             xn1(i) = (b(i) - sum) / A(i,i);
         }
+
         if((xn1 - xn).Norm2() / b.Norm2() <= tol)
-        {
-            maxiter = k;
-            return xn;
-        }
+            break;
+
         xn = xn1;
     }
+    for(auto& val: res)
+        ofs << val << endl;
+
     maxiter = k;
     return xn;
 }
 
 Vektor Gauss_Seidel(Matrix A, Vektor x0, Vektor b, double tol, int& maxiter)
 {
+    std::ofstream ofs("gauss_seidel.txt",std::ios::out);
+    vector<double> res;
+
     Vektor xn = x0;
     int k;
     for(k = 0; k < maxiter; k++)
     {
+        res.push_back(xn.Norm2() / b.Norm2());
+
         Vektor xn1(xn.Laenge());
         for (size_t i = 0; i < xn.Laenge(); i++)
         {
@@ -66,19 +81,21 @@ Vektor Gauss_Seidel(Matrix A, Vektor x0, Vektor b, double tol, int& maxiter)
             xn1(i) = (b(i) - sum) / A(i,i);
         }
         if((xn1 - xn).Norm2() / b.Norm2() <= tol)
-        {
-            maxiter = k;
-            return xn;
-        }
+            break;
 
         xn = xn1;
     }
+    for(auto& val: res)
+        ofs << val << endl;
     maxiter = k;
     return xn;
 }
 
 Vektor CG(Matrix A, Vektor x0, Vektor b, double tol, int& maxiter)
 {
+    std::ofstream ofs("cg.txt",std::ios::out);
+    vector<double> res;
+
     Vektor xn = x0;
     Vektor r = b - A * x0;
     Vektor p = r;
@@ -86,6 +103,8 @@ Vektor CG(Matrix A, Vektor x0, Vektor b, double tol, int& maxiter)
     int k;
     for(k = 0; k < maxiter && r.Norm2() / b.Norm2() > tol ; k++)
     {
+        res.push_back(xn.Norm2() / b.Norm2());
+
         Vektor q = A * p;
         double a = g / dot(q, p);
         Vektor xn1 = xn + a * p;
@@ -94,7 +113,11 @@ Vektor CG(Matrix A, Vektor x0, Vektor b, double tol, int& maxiter)
         p = r + (g2* p) / g;
         g  = g2;
         xn = xn1;
+
     }
+    for(auto& val: res)
+        ofs << val << endl;
+
     maxiter = k;
     return xn;
 }
@@ -384,13 +407,36 @@ int main(int argc, char *argv[])
 
   cout << " Ok.\n\nAlle Tests bestanden!" << endl;
 
-  if(argc == 1)
+  if(argc < 2 && argc >= 4)
   {
-    cout << "too few args\n";
+    cout << "Falsche Anzahl an Argumenten: ./test MethodeNr [BeispielNr]\n";
     return 1;
   }
 
-  if(argv[1][0] == '0')
+  std::istringstream istr(argv[1]);
+  int val;
+  int bsp = -1;
+  istr >> val;
+
+  if((istr.rdstate() & std::ifstream::failbit) != 0)
+  {
+      cout << "Falsches Argument an Stelle 1: ./test MethodeNr [BeispielNr]\n";
+      return 1;
+  }
+
+  if(argc == 3)
+  {
+      std::istringstream istr2(argv[2]);
+      istr2 >> bsp;
+      std::cout << bsp << '\n';
+    if(bsp == 0 || bsp > AnzahlBeispiele)
+    {
+        cout << "Falsches Argument an Stelle 2: ./test MethodeNr [BeispielNr]\n";
+        return 1;
+    }
+  }
+
+  if(val == 0)
   {
       std::cout << "\n\n Teste Jakobi\n";
 
@@ -401,12 +447,16 @@ int main(int argc, char *argv[])
           double tol;
           int maxiter;
 
+          if(bsp != -1)
+            i = bsp;
           Start (i, A, x0, b, tol, maxiter);
           auto x = Jacobi(A, x0, b, tol, maxiter);
           Ergebnis ( x,  maxiter, 0);
+          if(bsp != -1)
+            break;
       }
   }
-  else if(argv[1][0] == '1')
+  else if(val == 1)
   {
       std::cout << "\n\n Teste Gauss-Seidel\n";
 
@@ -417,12 +467,16 @@ int main(int argc, char *argv[])
           double tol;
           int maxiter;
 
+          if(bsp != -1)
+              i = bsp;
           Start (i, A, x0, b, tol, maxiter);
           auto x = Gauss_Seidel(A, x0, b, tol, maxiter);
           Ergebnis ( x,  maxiter, 1);
+          if(bsp != -1)
+            break;
       }
   }
-  else if(argv[1][0] == '2')
+  else if(val == 2)
   {
       std::cout << "\n\n Teste CG\n";
 
@@ -433,9 +487,13 @@ int main(int argc, char *argv[])
           double tol;
           int maxiter;
 
+            if(bsp != -1)
+              i = bsp;
           Start (i, A, x0, b, tol, maxiter);
           auto x = CG(A, x0, b, tol, maxiter);
           Ergebnis ( x,  maxiter, 2);
+          if(bsp != -1)
+            break;
       }
   }
   else
