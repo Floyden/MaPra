@@ -26,6 +26,7 @@ public:
     int IsOver() const;
     bool IsFree(int x) const;
     bool IsWinningMove(int x, Feld player) const;
+    bool WasWinningMove(int x, Feld player) const;
 
     bool Insert(int x, Feld color);
     void Remove(int x);
@@ -51,6 +52,16 @@ bool Board::IsFull() const
 bool Board::IsFree(int x) const
 {
     return At(x, 0) == leer;
+}
+
+bool Board::WasWinningMove(int x, Feld player) const
+{
+    if(At(x, 0) == Feld::leer)
+        return false;
+    Board tmp = *this;
+    tmp.Remove(x);
+    return tmp.IsWinningMove(x, player);
+
 }
 
 bool Board::IsWinningMove(int x, Feld player) const
@@ -274,7 +285,8 @@ int main()
     int Zug, Gegenzug;
 
     // Netzwerkspiel? Rufe NetzwerkMain() auf.
-#if 1
+    NetzwerkMain();
+#if 0
    Start(1);
 
     for(unsigned int Spiel = 1; Spiel <= AnzahlSpiele; Spiel++)
@@ -334,10 +346,79 @@ enum class SpielStatus {
 // Sollte das Spiel beendet sein oder ein Netzwerkfehler auftreten, muss diese Methode
 // das zugehoerige Element der Enumeration SpielStatus zurueckgeben.
 SpielStatus Netzwerkspiel( Feld MeineFarbe ) {
+    Board board;
+    Feld enemyColor = MeineFarbe == Feld::gelb ? Feld::rot : Feld::gelb;
 
-    // TODO Implementiere Netzwerkprotokoll
+    if(MeineFarbe == Feld::gelb)
+    {
+        int command;
+        while (true)
+        {
+            std::cout << "Eingabe: ";
+            std::cin >> command;
+            if (!std::cin)
+            {
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+            }
+            else if (command >= 0 && command <= 6)
+                break;
+        }
+        board.Insert(command, enemyColor);
+        if(!SendeZug(command))
+            return SpielStatus::Verbindungsfehler;
+    }
 
-    return SpielStatus::Verbindungsfehler;
+    bool ende = false;
+    while(!ende)
+    {
+        int enemy = EmpfangeZug();
+        std::cout << "Empfange: " << enemy << "\n";
+        if(enemy == SPIELENDE)
+        {
+            if(board.IsFull())
+                return SpielStatus::Unentschieden;
+            else
+                return SpielStatus::Sieg;
+        }
+        if(enemy == VERBINDUNGSFEHLER)
+            return SpielStatus::Verbindungsfehler;
+        if(enemy < 0 || enemy > AnzahlSpalten)
+            return SpielStatus::Verbindungsfehler;
+
+        // this case is already checked for when sending the data, therefore connection issues
+        if(!board.IsFree(enemy))
+            return SpielStatus::Verbindungsfehler;
+        if(board.IsWinningMove(enemy, enemyColor))
+            break;
+
+        board.Insert(enemy, enemyColor);
+        if(board.IsFull())
+        {
+            SendeZug(SPIELENDE);
+            return SpielStatus::Unentschieden;
+        }
+
+        int command;
+        while (true)
+        {
+            std::cout << "Eingabe: ";
+            std::cin >> command;
+            if (!std::cin)
+            {
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+            }
+            else if (command >= 0 && command <= 6 && board.Insert(command, MeineFarbe))
+                break;
+        }
+
+        if(!SendeZug(command))
+            return SpielStatus::Verbindungsfehler;
+    }
+
+    SendeZug(SPIELENDE);
+    return SpielStatus::Niederlage;
 }
 
 void NetzwerkMain() {
