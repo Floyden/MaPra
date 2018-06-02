@@ -9,7 +9,7 @@ void NetzwerkMain();
 
 
 const unsigned int Schwierigkeitsgrad = 0;
-const unsigned int LookAhead = 2;
+const unsigned int LookAhead = 8;
 
 enum Feld
 { leer, gelb, rot };
@@ -25,6 +25,7 @@ public:
     bool IsFull() const;
     int IsOver() const;
     bool IsFree(int x) const;
+    bool IsWinningMove(int x, Feld player) const;
 
     bool Insert(int x, Feld color);
     void Remove(int x);
@@ -52,11 +53,78 @@ bool Board::IsFree(int x) const
     return At(x, 0) == leer;
 }
 
+bool Board::IsWinningMove(int x, Feld player) const
+{
+    int y = AnzahlZeilen - 1;
+    for(; y >= 0 && At(x, y) != Feld::leer; y--);
+
+    // check vertical
+    int n = 1;
+    for (int i = y - 1; i >= 0 && n != 4; i--)
+    {
+        if(At(x, i) == player) n++;
+        else break;
+    }
+    for (int i = y + 1; i < AnzahlZeilen && n != 4; i++)
+    {
+        if(At(x, i) == player) n++;
+        else break;
+    }
+
+    if ( n >= 4) return true;
+
+    // check horizontal
+    n = 1;
+    for (int i = x - 1; i >= 0 && n != 4; i--)
+    {
+        if(At(i, y) == player) n++;
+        else break;
+    }
+    for (int i = x + 1; i < AnzahlSpalten && n != 4; i++)
+    {
+        if(At(i, y) == player) n++;
+        else break;
+    }
+
+    if ( n >= 4) return true;
+
+    // check diagonal1
+    n = 1;
+    for (int i = x + 1, j = y + 1; i < AnzahlSpalten && j < AnzahlZeilen && n != 4; i++, j++)
+    {
+        if(At(i, j) == player) n++;
+        else break;
+    }
+    for (int i = x + 1, j = y + 1; i >= 0 && j >= 0 && n != 4; i--, j--)
+    {
+        if(At(i, j) == player) n++;
+        else break;
+    }
+
+    if ( n >= 4) return true;
+
+    // check diagonal2
+    n = 1;
+    for (int i = x + 1, j = y - 1; i < AnzahlSpalten && j >= 0 && n != 4; i++, j--)
+    {
+        if(At(i, j) == player) n++;
+        else break;
+    }
+    for (int i = x - 1, j = y + 1; i >= 0 && j < AnzahlZeilen && n != 4; i--, j++)
+    {
+        if(At(i, j) == player) n++;
+        else break;
+    }
+    if ( n >= 4) return true;
+
+    return false;
+}
+
 bool Board::Insert(int x, Feld color)
 {
     if(x < 0 || x >= AnzahlSpalten )
         std::cout << "Wat" << '\n';
-    for (size_t i = AnzahlZeilen - 1; i > 0; i--)
+    for (int i = AnzahlZeilen - 1; i >= 0; i--)
     {
         if(At(x, i) == Feld::leer)
         {
@@ -79,103 +147,23 @@ void Board::Remove(int x)
     }
 }
 
-int Board::IsOver() const
+double evaluate(Feld player, const Board& board, int last_move = -1)
 {
-    //Check vertical
-    for (size_t i = 0; i < AnzahlSpalten; i++)
-    {
-        for (size_t j = 0; j < AnzahlZeilen - 3; )
-        {
-            Feld col = At(i,j);
-            if(col == Feld::leer)
-            {
-                j++;
-                continue;
-            }
-
-            // AnzahlSpalten AnzahlZeilen
-
-            if(At(i, ++j) == col && At(i, ++j) == col && At(i, ++j) == col)
-            {
-                return col == Feld::rot ? 1 : -1;
-            }
-        }
-    }
-
-    for (size_t i = 0; i < AnzahlZeilen; i++)
-    {
-        for (size_t j = 0; j < AnzahlSpalten - 3; )
-        {
-            Feld col = At(j,i);
-            if(col == Feld::leer)
-            {
-                j++;
-                continue;
-            }
-
-            // AnzahlSpalten AnzahlZeilen
-
-            if(At(++j, i) == col && At(++j, i) == col && At(++j, i) == col)
-            {
-                return col == Feld::rot ? 1 : -1;
-            }
-        }
-    }
-
-    // //Check diagonal (right downward)
-    // for (size_t i = 0; i < AnzahlSpalten - 3; i++)
+    return 0.0;
+    // // Feld enemy = player == Feld::gelb ? Feld::rot : Feld::gelb;
+    //
+    // // Check if Lost
+    // int val = board.IsOver();
+    //
+    //
+    // if(val == 0)
     // {
-    //     for (size_t j = 0; j < AnzahlZeilen - 3; j++)
-    //     {
-    //         size_t x = i;
-    //         size_t y = j;
-    //         while(x < AnzahlSpalten - 3 && y < AnzahlZeilen - 3)
-    //         {
-    //             Feld col= At(x, y);
-    //             if(At(++x, ++y) == col && At(++x, ++y) == col && At(++x, ++y) == col)
-    //             {
-    //                 return col == Feld::rot ? 1 : -1;
-    //             }
-    //         }
-    //     }
+    //     return 0.0;
     // }
-    // //Check diagonal (right downward)
-    // for (size_t i = AnzahlSpalten - 1; i >= 3; i--)
-    // {
-    //     for (size_t j = 0; j < AnzahlZeilen - 3; j++)
-    //     {
-    //         size_t x = i;
-    //         size_t y = j;
-    //         while(x >= 3 && y < AnzahlZeilen - 3)
-    //         {
-    //             Feld col= At(x, y);
-    //             if(At(--x, ++y) == col && At(--x, ++y) == col && At(--x, ++y) == col)
-    //             {
-    //                 return col == Feld::rot ? 1 : -1;
-    //             }
-    //         }
-    //     }
-    // }
-
-    return 0;
-}
-
-double evaluate(Feld player, const Board& board)
-{
-    // Feld enemy = player == Feld::gelb ? Feld::rot : Feld::gelb;
-
-    // Check if Lost
-    int val = board.IsOver();
-    if(val == 0)
-    {
-        return 0.0;
-    }
-
-    return -val;
-
+    //
     // if((val == 1 && player == Feld::rot) || (val == -1 && player == Feld::gelb))
     // {
-    //     std::cout << "player wins" << '\n';
+    //     // std::cout << "player wins" << '\n';
     //     return 1.0;
     // }
     // else
@@ -185,25 +173,85 @@ double evaluate(Feld player, const Board& board)
     // }
 }
 
-double Min(Feld player, unsigned int depth, Board& board)
+double Min(Feld, int, Board&);
+// Find best case for the player
+double Max(Feld player, int depth, Board& board)
 {
+    if(depth == 0)
+        return evaluate(player, board);
+
     Feld enemy = player == Feld::gelb ? Feld::rot : Feld::gelb;
-    double bestVal = 2.0;
+    double bestVal = -2.0;
+
     for (size_t i = 0; i < AnzahlSpalten; i++)
     {
-        if(!board.Insert(i, player))
+        if(!board.IsFree(i))
             continue;
 
-        double val = evaluate(player, board);
-        if(val != 0.0)
-            std::cout << "--> i: " << i << ", val: " << val << '\n';
-        if(val < bestVal || (val == bestVal && rand() % 2))
+        double val;
+        if(board.IsWinningMove(i, player))
+            val = 1.0;
+        else
+        {
+            board.Insert(i, player);
+            val = -Max(enemy, depth - 1, board);
+            board.Remove(i);
+        }
+        if(val != 0)
+        {
+          // if(depth == 1) std::cout << "----";
+          // if(depth == 2) std::cout << "---";
+          // if(depth == 3) std::cout << "--";
+          // // if(depth == 4) std::cout << "-";
+          // std::cout << "> i: " << i << ", val: " << val << '\n';
+        }
+
+        if(val > bestVal)
         {
             bestVal = val;
         }
-        board.Remove(i);
     }
     return bestVal;
+}
+
+// Finds the worst case for the player
+double Min(Feld player, int depth, Board& board)
+{
+    if(depth == 0)
+        return evaluate(player, board);
+
+    Feld enemy = player == Feld::gelb ? Feld::rot : Feld::gelb;
+    double worstVal = 2.0;
+
+    for (size_t i = 0; i < AnzahlSpalten; i++)
+    {
+        if(!board.IsFree(i))
+            continue;
+
+        double val;
+        if(board.IsWinningMove(i, player))
+            val = 1.0;
+        else
+        {
+            board.Insert(i, player);
+            val = Max(enemy, depth - 1, board);
+            board.Remove(i);
+        }
+        // if(val != 0)
+        {
+          // if(depth == 1) std::cout << "----";
+          // if(depth == 2) std::cout << "---";
+          // if(depth == 3) std::cout << "--";
+          // if(depth == 4) std::cout << "-";
+          // std::cout << "> i: " << i << ", val: " << val << '\n';
+        }
+
+        if(val < worstVal)
+        {
+            worstVal = val;
+        }
+    }
+    return worstVal;
 }
 
 //
@@ -213,129 +261,77 @@ int MinMax(Feld player, unsigned int depth, Board& board)
 
     std::cout << "Take Turn" << '\n';
     double bestVal = -2.0;
-    int bestMove = 0;
+
+    std::vector<int> rngesus(0);
+
     for (size_t i = 0; i < AnzahlSpalten; i++)
     {
         if(!board.Insert(i, player))
             continue;
 
-        std::cout << "-> i: " << i<< '\n';
         double val;
-        if(!board.IsOver())
-            val = -Min(enemy, depth - 1, board);
-        else
-            val = evaluate(player, board);
+        val = -Max(enemy, depth - 1, board);
+        std::cout << "-> i: " << i << ", val: " << val << '\n';
 
-        if(val > bestVal || (val == bestVal && rand() % 2))
+        if(val > bestVal)
         {
-            if(bestVal == 1.0)
-                std::cout << i << '\n';
+            rngesus.clear();
+            rngesus.push_back(i);
             bestVal = val;
-            bestMove = i;
         }
+        else if(val == bestVal)
+            rngesus.push_back(i);
 
         board.Remove(i);
     }
 
-    std::cout << "Move: " << bestMove << '\n';
+    int move =rngesus[rand() % rngesus.size()];
+    std::cout << "Move: " << move << '\n';
 
-    return bestMove;
+    return move;
 }
 
-void TestOver()
+void Test()
 {
-    Board board;
-    board.Reset();
-    std::cout << "board.At(0,0)" << '\n';
-    std::cout << board.At(0,0) << '\n';
-    std::cout << board.At(0,AnzahlZeilen - 1) << '\n';
-    std::cout << board.At(AnzahlSpalten - 1, 0) << '\n';
-    std::cout << board.At(AnzahlSpalten - 1,AnzahlZeilen - 1) << '\n';
+    srand(time(NULL));
+    Board b;
+    b.Insert(5, Feld::rot);
+    b.Insert(1, Feld::gelb);
+    b.Insert(6, Feld::rot);
+    b.Insert(2, Feld::gelb);
 
-    {
-        board.Insert(0, Feld::rot);
-        board.Insert(0, Feld::rot);
-        board.Insert(0, Feld::rot);
-        board.Insert(0, Feld::rot);
-
-        int val = board.IsOver();
-        if(val != 1)
-        {
-            std::cout << "Error at IsOver: Expected red to win at vertical, instead ";
-            if(val == 0)
-                std::cout << "no-one won" << '\n';
-            else
-                std::cout << "yellow won" << '\n';
-            return;
-        }
-
-        board.Reset();
-    }
-
-    {
-        board.Insert(0, Feld::rot);
-        board.Insert(1, Feld::rot);
-        board.Insert(2, Feld::rot);
-        board.Insert(3, Feld::rot);
-        int val = board.IsOver();
-        if(val != 1)
-        {
-            std::cout << "Error at IsOver: Expected red to win at horizontal, instead ";
-            if(val == 0)
-                std::cout << "no-one won" << '\n';
-            else
-                std::cout << "yellow won" << '\n';
-            return;
-        }
-
-        board.Reset();
-    }
-    {
-        board.Insert(0, Feld::rot);
-        board.Insert(1, Feld::gelb);
-        board.Insert(2, Feld::rot);
-        board.Insert(3, Feld::gelb);
-        board.Insert(0, Feld::gelb);
-        board.Insert(1, Feld::gelb);
-        board.Insert(2, Feld::gelb);
-        board.Insert(3, Feld::gelb);
-        int val = board.IsOver();
-        if(val != -1)
-        {
-            std::cout << "Error at IsOver: Expected yellow to win at horizontal, instead ";
-            if(val == 0)
-                std::cout << "no-one won" << '\n';
-            else
-                std::cout << "red won" << '\n';
-            return;
-        }
-
-        board.Reset();
-    }
+    int turn = MinMax(Feld::rot, 4, b);
+    b.Insert(turn, Feld::rot);
+    turn = MinMax(Feld::gelb, 4, b);
+    b.Insert(turn, Feld::gelb);
+    turn = MinMax(Feld::rot, 4, b);
 }
 
 int main()
 {
-    TestOver();
+    Test();
     Board board;
     int Zug, Gegenzug;
 
     // Netzwerkspiel? Rufe NetzwerkMain() auf.
-
+#if 1
    Start(1);
 
     for(unsigned int Spiel = 1; Spiel <= AnzahlSpiele; Spiel++)
     {
+        Gegenzug = 0;
+        board.Reset();
         Feld playerCol;
         Feld enemyCol;
 
-        if((Spiel % 2))
+        if(Spiel % 2)
         {
             playerCol = Feld::gelb;
             enemyCol = Feld::rot;
         }
         else
         {
+            std::cout << Spiel << '\n';
             playerCol = Feld::rot;
             enemyCol = Feld::gelb;
             Gegenzug = NaechsterZug(-1);
@@ -347,11 +343,12 @@ int main()
         while(Gegenzug != -1)
         {
             Zug = MinMax(playerCol, LookAhead, board);
+            if(Zug < 0 || Zug > 6)
+              std::cout << "Wat" << '\n';
             Gegenzug = NaechsterZug(Zug);
 
             if(Gegenzug < 0)
             {
-                board.Reset();
                 break;
             }
             std::cout << "Enemy Plays: "<< Gegenzug << '\n';
@@ -361,7 +358,8 @@ int main()
         }
 // ...
 
-}
+    }
+#endif
     return 0;
 }
 
