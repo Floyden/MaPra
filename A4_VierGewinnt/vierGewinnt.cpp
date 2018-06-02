@@ -214,46 +214,6 @@ double Max(Feld player, int depth, Board& board)
     return bestVal;
 }
 
-// Finds the worst case for the player
-double Min(Feld player, int depth, Board& board)
-{
-    if(depth == 0)
-        return evaluate(player, board);
-
-    Feld enemy = player == Feld::gelb ? Feld::rot : Feld::gelb;
-    double worstVal = 2.0;
-
-    for (size_t i = 0; i < AnzahlSpalten; i++)
-    {
-        if(!board.IsFree(i))
-            continue;
-
-        double val;
-        if(board.IsWinningMove(i, player))
-            val = 1.0;
-        else
-        {
-            board.Insert(i, player);
-            val = Max(enemy, depth - 1, board);
-            board.Remove(i);
-        }
-        // if(val != 0)
-        {
-          // if(depth == 1) std::cout << "----";
-          // if(depth == 2) std::cout << "---";
-          // if(depth == 3) std::cout << "--";
-          // if(depth == 4) std::cout << "-";
-          // std::cout << "> i: " << i << ", val: " << val << '\n';
-        }
-
-        if(val < worstVal)
-        {
-            worstVal = val;
-        }
-    }
-    return worstVal;
-}
-
 //
 int MinMax(Feld player, unsigned int depth, Board& board)
 {
