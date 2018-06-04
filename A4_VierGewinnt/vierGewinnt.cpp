@@ -9,7 +9,7 @@
 void NetzwerkMain();
 
 
-const unsigned int Schwierigkeitsgrad = 5;
+const unsigned int Schwierigkeitsgrad = 2;
 const unsigned int LookAhead = 6;
 
 
@@ -164,8 +164,11 @@ void Board::Remove(int x)
 int evaluate(Feld player, const Board& board, int last_move = -1)
 {
     int score = 0;
+
     int hash[6] = {0};
     int hash2[7] = {0};
+    int hashd[6] = {0};
+    int hashd2[6] = {0};
     for (size_t i = 0; i < AnzahlZeilen; i++)
     {
         for(size_t j = 0; j < AnzahlSpalten; j++)
@@ -176,11 +179,60 @@ int evaluate(Feld player, const Board& board, int last_move = -1)
             hash[i] *= 10;
         }
         hash2[i] *= 10;
+
         score += eval_map[hash[i]];
     }
-    for(size_t j = 0; j < AnzahlSpalten; j++)
-        score += eval_map[hash2[j]];
 
+    for (int x = 0; x < 6; x++)
+    {
+        if(x < 4)
+        {
+            for (int i = x, j = 0; i < AnzahlSpalten && j < AnzahlZeilen; i++, j++)
+            {
+              int val = (int)board.At(i,j);
+              hashd[x] += val;
+              hashd[x] *= 10;
+            }
+        }
+        else
+        {
+            for (int i = 0, j = x - 3; i < AnzahlSpalten && j < AnzahlZeilen; i++, j++)
+            {
+              int val = (int)board.At(i,j);
+              hashd[x] += val;
+              hashd[x] *= 10;
+            }
+        }
+    }
+
+    for (int x = 6; x >= 0; x--)
+    {
+        if(x > 3)
+        {
+            for (int i = x, j = 0; i >= 0 && j < AnzahlZeilen; i--, j++)
+            {
+              int val = (int)board.At(i,j);
+              hashd2[x] += val;
+              hashd2[x] *= 10;
+            }
+        }
+        else
+        {
+            for (int i = 6, j = x - 3; i >= 0 && j >= 0; i--, j--)
+            {
+              int val = (int)board.At(i,j);
+              hashd2[x] += val;
+              hashd2[x] *= 10;
+            }
+        }
+    }
+    for(size_t j = 0; j < AnzahlZeilen; j++)
+    {
+        score += eval_map[hashd[j]];
+        score += eval_map[hashd2[j]];
+        score += eval_map[hash2[j]];
+    }
+    score += eval_map[hash2[6]];
     if(player != Feld::gelb)
         score *= -1;
     return score;
@@ -325,7 +377,7 @@ int main()
     // Netzwerkspiel? Rufe NetzwerkMain() auf.
     NetzwerkMain();
 #else
-   Start(1);
+   Start(Schwierigkeitsgrad);
 
     for(unsigned int Spiel = 1; Spiel <= AnzahlSpiele; Spiel++)
     {
