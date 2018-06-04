@@ -4,12 +4,14 @@
 #include <iostream>
 #include <random>
 #include "unit.h"
+#include "minimax.h"
 
 void NetzwerkMain();
 
 
-const unsigned int Schwierigkeitsgrad = 0;
-const unsigned int LookAhead = 8;
+const unsigned int Schwierigkeitsgrad = 5;
+const unsigned int LookAhead = 6;
+
 
 enum Feld
 { leer, gelb, rot };
@@ -35,6 +37,7 @@ public:
 
     Feld* mBoard;
 };
+
 
 void Board::Reset()
 {
@@ -158,33 +161,31 @@ void Board::Remove(int x)
     }
 }
 
-double evaluate(Feld player, const Board& board, int last_move = -1)
+int evaluate(Feld player, const Board& board, int last_move = -1)
 {
-    return 0.0;
-    // // Feld enemy = player == Feld::gelb ? Feld::rot : Feld::gelb;
-    //
-    // // Check if Lost
-    // int val = board.IsOver();
-    //
-    //
-    // if(val == 0)
-    // {
-    //     return 0.0;
-    // }
-    //
-    // if((val == 1 && player == Feld::rot) || (val == -1 && player == Feld::gelb))
-    // {
-    //     // std::cout << "player wins" << '\n';
-    //     return 1.0;
-    // }
-    // else
-    // {
-    //     std::cout << "enemy wins" << '\n';
-    //     return -1.0;
-    // }
+    int score = 0;
+    int hash[6] = {0};
+    int hash2[7] = {0};
+    for (size_t i = 0; i < AnzahlZeilen; i++)
+    {
+        for(size_t j = 0; j < AnzahlSpalten; j++)
+        {
+            int val = (int)board.At(j,i);
+            hash[i] += val;
+            hash2[j] += val;
+            hash[i] *= 10;
+        }
+        hash2[i] *= 10;
+        score += eval_map[hash[i]];
+    }
+    for(size_t j = 0; j < AnzahlSpalten; j++)
+        score += eval_map[hash2[j]];
+
+    if(player != Feld::gelb)
+        score *= -1;
+    return score;
 }
 
-double Min(Feld, int, Board&);
 // Find best case for the player
 double Max(Feld player, int depth, Board& board)
 {
@@ -192,7 +193,7 @@ double Max(Feld player, int depth, Board& board)
         return evaluate(player, board);
 
     Feld enemy = player == Feld::gelb ? Feld::rot : Feld::gelb;
-    double bestVal = -2.0;
+    int bestVal = -32767;
 
     for (size_t i = 0; i < AnzahlSpalten; i++)
     {
@@ -201,22 +202,13 @@ double Max(Feld player, int depth, Board& board)
 
         double val;
         if(board.IsWinningMove(i, player))
-            val = 1.0;
+            val = 32767;
         else
         {
             board.Insert(i, player);
             val = -Max(enemy, depth - 1, board);
             board.Remove(i);
         }
-        if(val != 0)
-        {
-          // if(depth == 1) std::cout << "----";
-          // if(depth == 2) std::cout << "---";
-          // if(depth == 3) std::cout << "--";
-          // // if(depth == 4) std::cout << "-";
-          // std::cout << "> i: " << i << ", val: " << val << '\n';
-        }
-
         if(val > bestVal)
         {
             bestVal = val;
@@ -230,19 +222,31 @@ int MinMax(Feld player, unsigned int depth, Board& board)
 {
     Feld enemy = player == Feld::gelb ? Feld::rot : Feld::gelb;
 
-    std::cout << "Take Turn" << '\n';
-    double bestVal = -2.0;
+    // std::cout << "Take Turn" << '\n';
+    int bestVal = -32767;
 
     std::vector<int> rngesus(0);
 
     for (size_t i = 0; i < AnzahlSpalten; i++)
     {
-        if(!board.Insert(i, player))
+
+        if(!board.IsFree(i))
             continue;
 
-        double val;
-        val = -Max(enemy, depth - 1, board);
-        std::cout << "-> i: " << i << ", val: " << val << '\n';
+        int val;
+
+        if(board.IsWinningMove(i, player))
+        {
+            // std::cout << "kek" << '\n';
+            val = 32767;
+        }
+        else
+        {
+            board.Insert(i, player);
+            val = -Max(enemy, depth - 1, board);
+            board.Remove(i);
+        }
+        // std::cout << "-> i: " << i << ", val: " << val << '\n';
 
         if(val > bestVal)
         {
@@ -252,12 +256,11 @@ int MinMax(Feld player, unsigned int depth, Board& board)
         }
         else if(val == bestVal)
             rngesus.push_back(i);
-
-        board.Remove(i);
     }
 
-    int move =rngesus[rand() % rngesus.size()];
-    std::cout << "Move: " << move << '\n';
+    srand(time(NULL));
+    int move = rngesus[rand() % rngesus.size()];
+    // std::cout << "Move: " << move << '\n';
 
     return move;
 }
@@ -266,27 +269,62 @@ void Test()
 {
     srand(time(NULL));
     Board b;
-    b.Insert(5, Feld::rot);
-    b.Insert(1, Feld::gelb);
-    b.Insert(6, Feld::rot);
-    b.Insert(2, Feld::gelb);
+    b.Insert(0, Feld::rot);
+    b.Insert(0, Feld::rot);
+    b.Insert(0, Feld::rot);
+    std::cout << b.IsWinningMove(0, Feld::rot) << '\n';
+    b.Reset();
 
-    int turn = MinMax(Feld::rot, 4, b);
-    b.Insert(turn, Feld::rot);
-    turn = MinMax(Feld::gelb, 4, b);
-    b.Insert(turn, Feld::gelb);
-    turn = MinMax(Feld::rot, 4, b);
+    b.Insert(0, Feld::rot);
+    b.Insert(1, Feld::rot);
+    b.Insert(2, Feld::rot);
+    std::cout << b.IsWinningMove(3, Feld::rot) << '\n';
+    b.Reset();
+
+    b.Insert(0, Feld::rot);
+    b.Insert(1, Feld::gelb);
+    b.Insert(1, Feld::rot);
+    b.Insert(2, Feld::gelb);
+    b.Insert(2, Feld::gelb);
+    b.Insert(2, Feld::rot);
+    b.Insert(3, Feld::gelb);
+    b.Insert(3, Feld::gelb);
+    b.Insert(3, Feld::gelb);
+    std::cout << b.IsWinningMove(3, Feld::rot) << '\n';
+    b.Reset();
+
+    b.Insert(3, Feld::rot);
+    b.Insert(2, Feld::gelb);
+    b.Insert(2, Feld::rot);
+    b.Insert(1, Feld::gelb);
+    b.Insert(1, Feld::gelb);
+    b.Insert(1, Feld::rot);
+    b.Insert(0, Feld::gelb);
+    b.Insert(0, Feld::gelb);
+    b.Insert(0, Feld::gelb);
+    std::cout << b.IsWinningMove(0, Feld::rot) << '\n';
+    // b.Insert(5, Feld::rot);
+    // b.Insert(1, Feld::gelb);
+    // b.Insert(6, Feld::rot);
+    // b.Insert(2, Feld::gelb);
+    //
+    // int turn = MinMax(Feld::rot, 4, b);
+    // b.Insert(turn, Feld::rot);
+    // turn = MinMax(Feld::gelb, 4, b);
+    // b.Insert(turn, Feld::gelb);
+    // turn = MinMax(Feld::rot, 4, b);
 }
 
 int main()
 {
-    Test();
+    // Test();
     Board board;
     int Zug, Gegenzug;
 
+#if 0
     // Netzwerkspiel? Rufe NetzwerkMain() auf.
     NetzwerkMain();
-#if 0
+#else
    Start(1);
 
     for(unsigned int Spiel = 1; Spiel <= AnzahlSpiele; Spiel++)
@@ -308,7 +346,7 @@ int main()
             enemyCol = Feld::gelb;
             Gegenzug = NaechsterZug(-1);
             board.Insert(Gegenzug, enemyCol);
-            std::cout << "Enemy Plays: "<< Gegenzug << '\n';
+            // std::cout << "Enemy Plays: "<< Gegenzug << '\n';
         }
 
 
@@ -323,7 +361,7 @@ int main()
             {
                 break;
             }
-            std::cout << "Enemy Plays: "<< Gegenzug << '\n';
+            // std::cout << "Enemy Plays: "<< Gegenzug << '\n';
             board.Insert(Zug, playerCol);
             board.Insert(Gegenzug, enemyCol);
 
