@@ -9,8 +9,8 @@
 void NetzwerkMain();
 
 
-const unsigned int Schwierigkeitsgrad = 5;
-const unsigned int LookAhead = 6;
+const unsigned int Schwierigkeitsgrad = 4;
+const unsigned int LookAhead = 5;
 
 
 enum Feld
@@ -161,26 +161,204 @@ void Board::Remove(int x)
     }
 }
 
-int evaluate(Feld player, const Board& board, int last_move = -1)
+double _eval2(Feld col[4])
 {
-    int score = 0;
-    int hash[6] = {0};
-    int hash2[7] = {0};
-    for (size_t i = 0; i < AnzahlZeilen; i++)
+    int hash = col[0];
+    for(int i = 1; i < 4; i++)
     {
-        for(size_t j = 0; j < AnzahlSpalten; j++)
-        {
-            int val = (int)board.At(j,i);
-            hash[i] += val;
-            hash2[j] += val;
-            hash[i] *= 10;
-        }
-        hash2[i] *= 10;
-        score += eval_map[hash[i]];
+        hash *= 10;
+        hash += (int)col[i];
     }
-    for(size_t j = 0; j < AnzahlSpalten; j++)
-        score += eval_map[hash2[j]];
+    double val = eval_map[hash];
+    return val;
+    // Feld c = Feld::leer;
+    // int n = 0;
+    // for(int i = 0; i < 4; i++)
+    // {
+    //     if(col[i] == Feld::leer)
+    //         continue;
+    //     if(c == Feld::leer)
+    //     {
+    //         c = col[i];
+    //         n++;
+    //     }
+    //     else
+    //     {
+    //         if(c == col[i])
+    //             n++;
+    //         else
+    //         {
+    //             return 0.0;
+    //         }
+    //     }
+    // }
+    //
+    // const double Z0 = 0.0;
+    // const double Z1 = 0.0;
+    // const double Z2 = 0.05;
+    // const double Z3 = 1.90;
+    // const double Z4 = 1.00;
+    //
+    // double val = Z0;
+    // if(n == 1)
+    //     val == Z1;
+    // else if(n == 2)
+    //     val == Z2;
+    // else if(n == 3)
+    //     val == Z3;
+    // else
+    //     val == Z4;
+    //
+    // if(c == Feld::rot)
+    //     val = -val;
+    // return val;
+}
 
+// positive for yellow
+double _eval(int x, int y, const Board& board)
+{
+
+    // x x x x | v v v | 0
+    // x x x x | v v v | 1
+    // x_x_x_x_|_v_v_v_| 2
+    // />/>/>/>| 0 0 0 | 3
+    // />/>/>/>| 0 0 0 | 4
+    // />/>/>/>| 0 0 0 | 5
+    double val = 0.0;
+    Feld col[4];
+
+    if(x < AnzahlSpalten - 3)
+    {
+        col[0] = board.At(x,y);
+        col[1] = board.At(x + 1,y);
+        col[2] = board.At(x + 2,y);
+        col[3] = board.At(x + 3,y);
+
+        double v = _eval2(col);
+        if(v == -1.0 || v == 1.0)
+        {
+            // std::cout << "Hey" << '\n';
+            return v;
+        }
+        val += v;
+    }
+
+    if(y < AnzahlZeilen - 3)
+    {
+        col[4];
+        col[0] = board.At(x,y);
+        col[1] = board.At(x,y + 1);
+        col[2] = board.At(x,y + 2);
+        col[3] = board.At(x,y + 3);
+
+        double v = _eval2(col);
+        if(v == -1.0 || v == 1.0)
+        {
+            // std::cout << "Hey" << '\n';
+            return v;
+        }
+        val += v;
+    }
+
+    if(x < AnzahlSpalten - 3 && y < AnzahlZeilen - 3)
+    {
+        col[4];
+        col[0] = board.At(x,y);
+        col[1] = board.At(x + 1, y + 1);
+        col[2] = board.At(x + 2, y + 2);
+        col[3] = board.At(x + 3, y + 3);
+
+        double v = _eval2(col);
+        if(v == -1.0 || v == 1.0)
+        {
+            // std::cout << "Hey" << '\n';
+            return v;
+        }
+        val += v;
+    }
+
+    if(x >= 3 && y < AnzahlZeilen - 3)
+    {
+        col[4];
+        col[0] = board.At(x,y);
+        col[1] = board.At(x - 1, y + 1);
+        col[2] = board.At(x - 2, y + 2);
+        col[3] = board.At(x - 3, y + 3);
+
+        double v = _eval2(col);
+        if(v == -1.0 || v == 1.0)
+        {
+            // std::cout << "Hey" << '\n';
+            return v;
+        }
+        val += v;
+    }
+
+    if(x < AnzahlSpalten - 3 && y >= 3)
+    {
+        col[4];
+        col[0] = board.At(x,y);
+        col[1] = board.At(x + 1, y - 1);
+        col[2] = board.At(x + 2, y - 2);
+        col[3] = board.At(x + 3, y - 3);
+
+        double v = _eval2(col);
+        if(v == -1.0 || v == 1.0)
+        {
+            // std::cout << "Hey" << '\n';
+            return v;
+        }
+        val += v;
+    }
+
+    if(x >= 3 && y >= 3)
+    {
+        col[4];
+        col[0] = board.At(x,y);
+        col[1] = board.At(x - 1, y - 1);
+        col[2] = board.At(x - 2, y - 2);
+        col[3] = board.At(x - 3, y - 3);
+
+        double v = _eval2(col);
+        if(v == -1.0 || v == 1.0)
+        {
+            // std::cout << "Hey" << '\n';
+            return v;
+        }
+        val += v;
+    }
+
+
+    if(val < -1.0 || val > 1.0)
+    {
+        std::cout << "Eval out of bounds, pls fix: " << val << '\n';
+    }
+
+    return val;
+}
+
+double evaluate(Feld player, const Board& board, int last_move = -1)
+{
+    double score = 0.0;
+    for(int i = 0; i < AnzahlZeilen; i++)
+    {
+        for (int j = 0; j < AnzahlSpalten; j++)
+        {
+            double tmp = _eval(j,i, board);
+            if(tmp == 1.0 || tmp == -1.0)
+            {
+                if(player != Feld::gelb)
+                    tmp *= -1;
+                return tmp;
+            }
+
+            score += tmp;
+            // if(score < -1.0 || score > 1.0)
+            // {
+            //     std::cout << "Score out of bounds, pls fix: " << score << '\n';
+            // }
+        }
+    }
     if(player != Feld::gelb)
         score *= -1;
     return score;
@@ -193,17 +371,18 @@ double Max(Feld player, int depth, Board& board)
         return evaluate(player, board);
 
     Feld enemy = player == Feld::gelb ? Feld::rot : Feld::gelb;
-    int bestVal = -32767;
+    double bestVal = -1.0;
 
     for (size_t i = 0; i < AnzahlSpalten; i++)
     {
         if(!board.IsFree(i))
             continue;
 
-        double val;
-        if(board.IsWinningMove(i, player))
-            val = 32767;
-        else
+        double val = evaluate(player, board);
+        // if(board.IsWinningMove(i, player))
+        //     val = 1.0;
+        if(val != 1.0 && val != -1.0)
+        // else
         {
             board.Insert(i, player);
             val = -Max(enemy, depth - 1, board);
@@ -223,7 +402,7 @@ int MinMax(Feld player, unsigned int depth, Board& board)
     Feld enemy = player == Feld::gelb ? Feld::rot : Feld::gelb;
 
     // std::cout << "Take Turn" << '\n';
-    int bestVal = -32767;
+    double bestVal = -1.0;
 
     std::vector<int> rngesus(0);
 
@@ -233,20 +412,18 @@ int MinMax(Feld player, unsigned int depth, Board& board)
         if(!board.IsFree(i))
             continue;
 
-        int val;
+        // double val;
 
-        if(board.IsWinningMove(i, player))
-        {
-            // std::cout << "kek" << '\n';
-            val = 32767;
-        }
-        else
+        double val = evaluate(player, board);
+        // if(board.IsWinningMove(i, player))
+        //     val = 1.0;
+        if(val != 1.0 && val != -1.0)
+        // else
         {
             board.Insert(i, player);
             val = -Max(enemy, depth - 1, board);
             board.Remove(i);
         }
-        // std::cout << "-> i: " << i << ", val: " << val << '\n';
 
         if(val > bestVal)
         {
@@ -265,56 +442,6 @@ int MinMax(Feld player, unsigned int depth, Board& board)
     return move;
 }
 
-void Test()
-{
-    srand(time(NULL));
-    Board b;
-    b.Insert(0, Feld::rot);
-    b.Insert(0, Feld::rot);
-    b.Insert(0, Feld::rot);
-    std::cout << b.IsWinningMove(0, Feld::rot) << '\n';
-    b.Reset();
-
-    b.Insert(0, Feld::rot);
-    b.Insert(1, Feld::rot);
-    b.Insert(2, Feld::rot);
-    std::cout << b.IsWinningMove(3, Feld::rot) << '\n';
-    b.Reset();
-
-    b.Insert(0, Feld::rot);
-    b.Insert(1, Feld::gelb);
-    b.Insert(1, Feld::rot);
-    b.Insert(2, Feld::gelb);
-    b.Insert(2, Feld::gelb);
-    b.Insert(2, Feld::rot);
-    b.Insert(3, Feld::gelb);
-    b.Insert(3, Feld::gelb);
-    b.Insert(3, Feld::gelb);
-    std::cout << b.IsWinningMove(3, Feld::rot) << '\n';
-    b.Reset();
-
-    b.Insert(3, Feld::rot);
-    b.Insert(2, Feld::gelb);
-    b.Insert(2, Feld::rot);
-    b.Insert(1, Feld::gelb);
-    b.Insert(1, Feld::gelb);
-    b.Insert(1, Feld::rot);
-    b.Insert(0, Feld::gelb);
-    b.Insert(0, Feld::gelb);
-    b.Insert(0, Feld::gelb);
-    std::cout << b.IsWinningMove(0, Feld::rot) << '\n';
-    // b.Insert(5, Feld::rot);
-    // b.Insert(1, Feld::gelb);
-    // b.Insert(6, Feld::rot);
-    // b.Insert(2, Feld::gelb);
-    //
-    // int turn = MinMax(Feld::rot, 4, b);
-    // b.Insert(turn, Feld::rot);
-    // turn = MinMax(Feld::gelb, 4, b);
-    // b.Insert(turn, Feld::gelb);
-    // turn = MinMax(Feld::rot, 4, b);
-}
-
 int main()
 {
     // Test();
@@ -325,7 +452,7 @@ int main()
     // Netzwerkspiel? Rufe NetzwerkMain() auf.
     NetzwerkMain();
 #else
-   Start(1);
+   Start(Schwierigkeitsgrad);
 
     for(unsigned int Spiel = 1; Spiel <= AnzahlSpiele; Spiel++)
     {
