@@ -30,7 +30,13 @@ public:
 
 CostT CoordinateGraph::estimatedCost( VertexT from, VertexT to) const
 {
-    return 0;
+    auto fromCoord = mCoordinates[from];
+    auto toCoord = mCoordinates[to];
+    double distance = std::sqrt(
+        (fromCoord.first + toCoord.first) *  (fromCoord.first + toCoord.first) +
+        (fromCoord.second + toCoord.second) *  (fromCoord.second + toCoord.second)
+    )
+    return distance;
 }
 
 CostT CoordinateGraph::cost( VertexT from, VertexT to) const
@@ -65,10 +71,12 @@ public:
     size_t width;
     size_t height;
     std::vector<CellType> cells;
+    mutable std::vector<NeighborT> why;
 };
 
-const NeighborT& getNeighbors( VertexT v) const
+const NeighborT& getNeighbors(VertexT v) const
 {
+
 }
 
 
