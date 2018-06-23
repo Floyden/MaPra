@@ -35,13 +35,43 @@ CostT CoordinateGraph::estimatedCost( VertexT from, VertexT to) const
 
 CostT CoordinateGraph::cost( VertexT from, VertexT to) const
 {
-    return 0;
+    auto v = getNeighbors(from);
+    for(auto& e: v)
+        if(e.first == to)
+            return e.second;
+
+    return infty;
 }
 
 const CoordinateGraph::NeighborT& CoordinateGraph::getNeighbors(VertexT v) const
 {
     return mEdges[v];
 }
+
+class LabyrinthGraph : public DistanceGraph {
+public:
+    LabyrinthGraph(size_t width, size_t height, std::vector<CellType> cd) :
+        DistanceGraph(width * height), cells(cd) {};
+
+    const NeighborT& getNeighbors( VertexT v) const override;
+
+    CostT estimatedCost( VertexT from, VertexT to) const override;
+
+    CostT cost( VertexT from, VertexT to) const override;
+
+    void addEdge(VertexT from, VertexT to, CostT cost);
+    void setCoordinates(VertexT v, double x, double y);
+
+    size_t width;
+    size_t height;
+    std::vector<CellType> cells;
+};
+
+const NeighborT& getNeighbors( VertexT v) const
+{
+}
+
+
 
 void Dijkstra(const DistanceGraph& g, GraphVisualizer& v, VertexT start, std::vector<CostT>& kostenZumStart) {
     kostenZumStart.resize(g.numVertices());
@@ -61,13 +91,11 @@ void Dijkstra(const DistanceGraph& g, GraphVisualizer& v, VertexT start, std::ve
         unvisited.insert(i);
     }
 
-    std::cout << infty << '\n';
-
     while(!unvisited.empty())
     {
         VertexT current = undefinedVertex;
         CostT best_dist = infty;
-        std::cout << "test" << '\n';
+
         for (auto& vert: unvisited) {
             if(best_dist > kostenZumStart[vert])
             {
@@ -111,18 +139,24 @@ int main()
         }
     }
 
+    std::string fileName;
+    switch (bspl) {
+        case 1: fileName = "Graph1.dat"; break;
+        case 2: fileName = "Graph2.dat"; break;
+        case 3: fileName = "Graph3.dat"; break;
+        case 4: fileName = "Graph4.dat"; break;
+        case 5: fileName = "Maze1.dat"; break;
+        case 6: fileName = "Maze2.dat"; break;
+        case 7: fileName = "Maze3.dat"; break;
+        case 8: fileName = "Maze4.dat"; break;
+        case 9: fileName = "Maze5.dat"; break;
+        default: break;
+    }
+    std::ifstream stream(fileName);
+
     CoordinateGraph* graph;
     if(bspl <= 4)
     {
-        std::string fileName;
-        switch (bspl) {
-            case 1: fileName = "daten/Graph1.dat"; break;
-            case 2: fileName = "daten/Graph2.dat"; break;
-            case 3: fileName = "daten/Graph3.dat"; break;
-            case 4: fileName = "daten/Graph4.dat"; break;
-            default: break;
-        }
-        std::ifstream stream(fileName);
 
         size_t vert;
         size_t edges;
@@ -149,21 +183,8 @@ int main()
 
         graph = new CoordinateGraph(vert, edgy, crd);
     }
-    else
+    else if( bspl <= 9)
     {
-        std::string fileName;
-        switch (bspl) {
-            case 1: fileName = "Graph1.dat"; break;
-            case 2: fileName = "Graph2.dat"; break;
-            case 3: fileName = "Graph3.dat"; break;
-            case 4: fileName = "Graph4.dat"; break;
-            case 5: fileName = "Maze1.dat"; break;
-            case 6: fileName = "Maze2.dat"; break;
-            case 7: fileName = "Maze3.dat"; break;
-            case 8: fileName = "Maze4.dat"; break;
-            case 9: fileName = "Maze5.dat"; break;
-            default: break;
-        }
     }
 
 
