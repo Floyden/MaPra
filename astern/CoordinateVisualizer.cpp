@@ -1,4 +1,5 @@
 #include "CoordinateVisualizer.h"
+#include "unit.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -122,25 +123,25 @@ void CoordinateVisualizer::draw()
 
             tri.setScale(5, 5);
 
-            switch (estate[graph->mEdges[i][j]]) {
+            switch (estate[{i, graph->mEdges[i][j].first}]) {
                 case EdgeStatus::UnknownEdge:
-                    line[0].color = {127, 127, 127 };
-                    line[1].color = {127, 127, 127 };
+                    line[0].color = {127, 127, 127, 127 };
+                    line[1].color = {127, 127, 127, 255 };
                     tri.setFillColor(sf::Color(127, 127, 127 ));
                     break;
                 case EdgeStatus::Visited:
-                    line[0].color = {0, 255,255 };
-                    line[1].color = {0, 255,255 };
+                    line[0].color = {0, 255,255, 32  };
+                    line[1].color = {0, 255,255, 255  };
                     tri.setFillColor(sf::Color(0, 255, 255));
                     break;
                 case EdgeStatus::Active:
-                    line[0].color = {0, 255, 0 };
-                    line[1].color = {0, 255, 0 };
+                    line[0].color = {0, 255, 0, 127  };
+                    line[1].color = {0, 255, 0, 255  };
                     tri.setFillColor(sf::Color(0, 255, 0));
                     break;
                 case EdgeStatus::Optimal:
-                    line[0].color = {255, 255, 0 };
-                    line[1].color = {255, 255, 0 };
+                    line[0].color = {255, 255, 0, 127 };
+                    line[1].color = {255, 255, 0, 255  };
                     tri.setFillColor(sf::Color(255, 255, 0));
                     break;
             };
@@ -199,15 +200,22 @@ void CoordinateVisualizer::draw()
             text.setFont(font);
             text.setCharacterSize(20);
             text.setFillColor(sf::Color(255.0, 255.0, 0.0));
+            std::string txt;
             if(cost[i] != infty)
-            {
-                std::string txt = std::to_string(cost[i]).erase(5);
-                if(estimate[i] != 0)
-                    txt.append("+" + std::to_string(estimate[i]).erase(5));
-                text.setString(txt);
-            }
+                 txt = std::to_string(cost[i]).erase(5);
             else
-                text.setString("?");
+                txt = "?";
+
+            if(estimate[i] != 0 && estimate[i] != infty)
+            {
+                if(cost[i] != infty)
+                    txt.append("+" + std::to_string(estimate[i] - cost[i]).erase(5));
+                else
+                    txt.append("+" + std::to_string(estimate[i]).erase(5));
+
+            }
+            text.setString(txt);
+
             text.setPosition(xPos + circleRad, yPos+ circleRad);
 
             window.draw(text);

@@ -2,7 +2,7 @@
 #include "unit.h"
 #include <cmath>
 
-#define WAIT_TIME 1000
+#define WAIT_TIME 500
 
 // Ein Graph, der Koordinaten von Knoten speichert.
 class CoordinateGraph : public DistanceGraph {
@@ -23,7 +23,6 @@ public:
                 minVal.first = cd.first;
             if(cd.second < minVal.second)
                 minVal.second = cd.second;
-
         }
         maxXDist = maxVal.first - minVal.first;
         maxYDist = maxVal.second - minVal.second;

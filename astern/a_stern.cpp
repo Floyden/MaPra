@@ -21,8 +21,13 @@ CostT CoordinateGraph::estimatedCost( VertexT from, VertexT to) const
     double distance = std::sqrt(
         (fromCoord.first - toCoord.first) *  (fromCoord.first - toCoord.first) +
         (fromCoord.second - toCoord.second) *  (fromCoord.second - toCoord.second)
-    ) / maxDist;
-    return distance;
+    ) / maxXDist;
+
+    double distance2 = infty;
+    for(auto& e: mEdges[from])
+        if(e.first == to)
+            distance2 = e.second;
+    return distance < distance2 ? distance : distance2;
 }
 
 CostT CoordinateGraph::cost( VertexT from, VertexT to) const
@@ -77,18 +82,26 @@ std::istream& operator>>(std::istream& is, CellType& ct)
     return is;
 }
 
-void Dijkstra(const DistanceGraph& g, GraphVisualizer& v, VertexT start, std::vector<CostT>& kostenZumStart) {
+void Dijkstra(const DistanceGraph& g, GraphVisualizer& v, VertexT start, std::vector<CostT>& kostenZumStart)
+{
+    std::map<VertexT, VertexT> parents;
 
     kostenZumStart.resize(g.numVertices());
     for(auto& e: kostenZumStart)
         e = infty;
     kostenZumStart[start] = 0;
 
+    v.updateVertex(start, 0.0, 0.0, start, VertexStatus::Active);
     auto& neighbors = g.getNeighbors(start);
     for(auto neighbor: neighbors)
-            kostenZumStart[neighbor.first] = neighbor.second;
-
-    v.updateVertex(start, 0.0, 0.0, start, VertexStatus::Active);
+    {
+        v.markEdge({start, neighbor.first}, EdgeStatus::Active);
+        v.draw();
+        kostenZumStart[neighbor.first] = neighbor.second;
+        parents[neighbor.first] = start;
+        v.markEdge({start, neighbor.first}, EdgeStatus::Visited);
+    }
+    v.updateVertex(start, 0.0, 0.0, start, VertexStatus::Done);
     v.draw();
 
     std::set<VertexT> unvisited;
@@ -116,19 +129,24 @@ void Dijkstra(const DistanceGraph& g, GraphVisualizer& v, VertexT start, std::ve
         if(current == undefinedVertex)
             break;
 
+        v.updateVertex(current, kostenZumStart[current], 0.0, current, VertexStatus::Active);
+        v.markEdge({parents[current], current}, EdgeStatus::Optimal);
 
         auto& neighbors = g.getNeighbors(current);
         for(auto neighbor: neighbors)
         {
+            v.markEdge({current, neighbor.first}, EdgeStatus::Active);
+            v.draw();
             if(kostenZumStart[neighbor.first] >
                     kostenZumStart[current] + neighbor.second)
             {
                 kostenZumStart[neighbor.first] = kostenZumStart[current] + neighbor.second;
-                v.updateVertex(neighbor.first, kostenZumStart[neighbor.first], 0, current, VertexStatus::InQueue);
+                parents[neighbor.first] = current;
+                v.updateVertex(neighbor.first, kostenZumStart[neighbor.first], 0, parents[neighbor.first], VertexStatus::InQueue);
             }
+            v.markEdge({current, neighbor.first}, EdgeStatus::Visited);
         }
-        v.updateVertex(current, kostenZumStart[current], 0.0, current, VertexStatus::Destination);
-        // v.markVertex(current, VertexStatus::Destination);
+        v.updateVertex(current, kostenZumStart[current], 0.0, current, VertexStatus::Done);
         v.draw();
     }
     v.draw();
@@ -143,10 +161,11 @@ bool A_star(const DistanceGraph& g, GraphVisualizer& v, VertexT start, VertexT z
     score[start] = 0.0;
 
     std::vector<double> est(g.numVertices(), infty);
-    score[start] = g.estimatedCost(start, ziel);
+    est[start] = 0.0;
+    est[ziel] = g.estimatedCost(start, ziel);
 
     v.updateVertex(start, 0.0, score[start], start, VertexStatus::Active);
-    v.updateVertex(ziel, infty, score[ziel], ziel, VertexStatus::Destination);
+    v.updateVertex(ziel, infty, est[ziel], ziel, VertexStatus::Destination);
     v.draw();
     std::vector<VertexT> path(g.numVertices(), undefinedVertex);
 
@@ -156,7 +175,8 @@ bool A_star(const DistanceGraph& g, GraphVisualizer& v, VertexT start, VertexT z
         for(auto& x: known)
             if(est[x] < est[current])
                 current = x;
-        v.markVertex(current, VertexStatus::Active);
+
+        v.updateVertex(current, score[current], est[current], path[current], VertexStatus::Active);
         if(current == ziel)
         {
             v.markVertex(start, VertexStatus::Active);
@@ -166,6 +186,7 @@ bool A_star(const DistanceGraph& g, GraphVisualizer& v, VertexT start, VertexT z
             while(tmp != start)
             {
                 v.markVertex(tmp, VertexStatus::Active);
+                v.markEdge({path[tmp], tmp}, EdgeStatus::Optimal);
                 weg.push_front(tmp);
                 tmp = path[tmp];
             }
@@ -182,14 +203,17 @@ bool A_star(const DistanceGraph& g, GraphVisualizer& v, VertexT start, VertexT z
         auto neighbors = g.getNeighbors(current);
         for(auto& _nb : neighbors)
         {
-            // std::cout << current << " NB " <<_nb.first << '\n';
             auto nb = _nb.first;
+            v.markEdge({current, _nb.first}, EdgeStatus::Active);
+            v.draw();
+            v.markEdge({current, _nb.first}, EdgeStatus::Visited);
             if(finished.find(nb) != finished.end())
                 continue;
             known.insert(nb);
-            v.markVertex(nb, VertexStatus::InQueue);
             if(score[current] + g.cost(current, nb) >= score[nb])
                 continue;
+
+            v.updateVertex(nb, score[nb], est[nb], path[nb], VertexStatus::InQueue);
 
             path[nb] = current;
             score[nb] = score[current] + g.cost(current, nb);
@@ -197,7 +221,6 @@ bool A_star(const DistanceGraph& g, GraphVisualizer& v, VertexT start, VertexT z
 
         }
         v.draw();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         v.markVertex(current, VertexStatus::Done);
     }
     weg.clear();
@@ -288,16 +311,16 @@ int main()
         }
         CoordinateVisualizer* fnaa = reinterpret_cast<CoordinateVisualizer*>(visualizer.get());
 
-        for (size_t i = 0; i < graph->numVertices(); i++)
-        {
-            std::vector<CostT> cost;
-            Dijkstra(*graph, *visualizer, i, cost);
-            fnaa->wait();
-            fnaa->reset();
-            // if(visualizer)
-            //     delete visualizer;
-            // PruefeDijkstra(bspl, i, cost);
-        }
+        // for (size_t i = 0; i < graph->numVertices(); i++)
+        // {
+        //     std::vector<CostT> cost;
+        //     Dijkstra(*graph, *visualizer, i, cost);
+        //     fnaa->wait();
+        //     fnaa->reset();
+        //     // if(visualizer)
+        //     //     delete visualizer;
+        //     // PruefeDijkstra(bspl, i, cost);
+        // }
         for (size_t i = 0; i < graph->numVertices(); i++)
         {
 
