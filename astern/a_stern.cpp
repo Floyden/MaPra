@@ -1,41 +1,17 @@
 
 #include "text_visualizer.h"
-#include "unit.h"
+#include "MazeVisualizer.h"
+#include "CoordinateVisualizer.h"
+#include "a_stern.h"
 #include <set>
 
-#include <cmath>
+#include <memory>
 #include <limits>
 #include <fstream>
 #include <iterator>
 #include <map>
-
-// Ein Graph, der Koordinaten von Knoten speichert.
-class CoordinateGraph : public DistanceGraph {
-public:
-    CoordinateGraph(size_t vertcount, std::vector<NeighborT> edgy, std::vector<std::pair<double, double>> cd) :
-        DistanceGraph(vertcount), mEdges(edgy), mCoordinates(cd), maxDist(-1.0)
-    {
-        for(auto& cd: mCoordinates)
-        {
-            double distance = std::sqrt(cd.first * cd.first + cd.second * cd.second);
-            if(distance > maxDist)
-                maxDist = distance;
-        }
-    };
-
-    const NeighborT& getNeighbors( VertexT v) const override;
-
-    CostT estimatedCost( VertexT from, VertexT to) const override;
-
-    CostT cost( VertexT from, VertexT to) const override;
-
-    void addEdge(VertexT from, VertexT to, CostT cost);
-    void setCoordinates(VertexT v, double x, double y);
-
-    std::vector<NeighborT> mEdges;
-    std::vector<std::pair<double, double>> mCoordinates;
-    double maxDist;
-};
+#include <thread>
+#include <chrono>
 
 CostT CoordinateGraph::estimatedCost( VertexT from, VertexT to) const
 {
@@ -64,42 +40,6 @@ const CoordinateGraph::NeighborT& CoordinateGraph::getNeighbors(VertexT v) const
     return mEdges[v];
 }
 
-class LabyrinthGraph : public DistanceGraph {
-public:
-    LabyrinthGraph(size_t width, size_t height, std::vector<CellType> cd) :
-        DistanceGraph(width * height), width(width), height(height)
-    {
-        for (size_t v = 0; v < cd.size(); v++)
-        {
-            edges.push_back({cd[v], NeighborT()});
-            if(cd[v] == CellType::Wall)
-                continue;
-
-            if(v >= width && cd[v - width] != CellType::Wall)
-                edges.back().second.push_back({v - width, 1});
-            if(v % width && cd[v - 1] != CellType::Wall)
-                edges.back().second.push_back({v - 1, 1});
-            if((v + 1) % width && cd[v + 1] != CellType::Wall)
-                edges.back().second.push_back({v + 1, 1});
-            if(v + width < width * height && cd[v + width] != CellType::Wall)
-                edges.back().second.push_back({v + width, 1});
-
-        }
-    };
-
-    const NeighborT& getNeighbors( VertexT v) const override;
-
-    CostT estimatedCost( VertexT from, VertexT to) const override;
-
-    CostT cost( VertexT from, VertexT to) const override;
-
-    void addEdge(VertexT from, VertexT to, CostT cost);
-    void setCoordinates(VertexT v, double x, double y);
-
-    size_t width;
-    size_t height;
-    std::vector<std::pair<CellType, NeighborT>> edges;
-};
 
 const LabyrinthGraph::NeighborT& LabyrinthGraph::getNeighbors(VertexT v) const
 {
@@ -138,6 +78,7 @@ std::istream& operator>>(std::istream& is, CellType& ct)
 }
 
 void Dijkstra(const DistanceGraph& g, GraphVisualizer& v, VertexT start, std::vector<CostT>& kostenZumStart) {
+
     kostenZumStart.resize(g.numVertices());
     for(auto& e: kostenZumStart)
         e = infty;
@@ -146,6 +87,9 @@ void Dijkstra(const DistanceGraph& g, GraphVisualizer& v, VertexT start, std::ve
     auto& neighbors = g.getNeighbors(start);
     for(auto neighbor: neighbors)
             kostenZumStart[neighbor.first] = neighbor.second;
+
+    v.updateVertex(start, 0.0, 0.0, start, VertexStatus::Active);
+    v.draw();
 
     std::set<VertexT> unvisited;
     for(size_t i = 0; i < g.numVertices(); i++)
@@ -172,15 +116,22 @@ void Dijkstra(const DistanceGraph& g, GraphVisualizer& v, VertexT start, std::ve
         if(current == undefinedVertex)
             break;
 
+
         auto& neighbors = g.getNeighbors(current);
         for(auto neighbor: neighbors)
         {
             if(kostenZumStart[neighbor.first] >
                     kostenZumStart[current] + neighbor.second)
+            {
                 kostenZumStart[neighbor.first] = kostenZumStart[current] + neighbor.second;
+                v.updateVertex(neighbor.first, kostenZumStart[neighbor.first], 0, current, VertexStatus::InQueue);
+            }
         }
-
+        v.updateVertex(current, kostenZumStart[current], 0.0, current, VertexStatus::Destination);
+        // v.markVertex(current, VertexStatus::Destination);
+        v.draw();
     }
+    v.draw();
 }
 
 
@@ -194,6 +145,9 @@ bool A_star(const DistanceGraph& g, GraphVisualizer& v, VertexT start, VertexT z
     std::vector<double> est(g.numVertices(), infty);
     score[start] = g.estimatedCost(start, ziel);
 
+    v.updateVertex(start, 0.0, score[start], start, VertexStatus::Active);
+    v.updateVertex(ziel, infty, score[ziel], ziel, VertexStatus::Destination);
+    v.draw();
     std::vector<VertexT> path(g.numVertices(), undefinedVertex);
 
     while (!known.empty())
@@ -202,18 +156,23 @@ bool A_star(const DistanceGraph& g, GraphVisualizer& v, VertexT start, VertexT z
         for(auto& x: known)
             if(est[x] < est[current])
                 current = x;
+        v.markVertex(current, VertexStatus::Active);
         if(current == ziel)
         {
+            v.markVertex(start, VertexStatus::Active);
             //done
             weg.clear();
             VertexT tmp = current;
             while(tmp != start)
             {
+                v.markVertex(tmp, VertexStatus::Active);
                 weg.push_front(tmp);
                 tmp = path[tmp];
             }
             weg.push_front(start);
+            v.markVertex(ziel, VertexStatus::Destination);
 
+            v.draw();
             return true;
         }
 
@@ -228,13 +187,18 @@ bool A_star(const DistanceGraph& g, GraphVisualizer& v, VertexT start, VertexT z
             if(finished.find(nb) != finished.end())
                 continue;
             known.insert(nb);
+            v.markVertex(nb, VertexStatus::InQueue);
             if(score[current] + g.cost(current, nb) >= score[nb])
                 continue;
 
             path[nb] = current;
             score[nb] = score[current] + g.cost(current, nb);
             est[nb] = score[nb] + g.estimatedCost(nb, ziel);
+
         }
+        v.draw();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        v.markVertex(current, VertexStatus::Done);
     }
     weg.clear();
     weg.push_front(start);
@@ -289,7 +253,8 @@ int main()
     std::ifstream stream(fileName);
 
 
-    DistanceGraph* graph;
+    std::shared_ptr<DistanceGraph> graph;
+    std::unique_ptr<GraphVisualizer> visualizer;
     if(bspl <= 4)
     {
         size_t vert;
@@ -315,7 +280,37 @@ int main()
             crd.emplace_back(x,y);
         }
 
-        graph = new CoordinateGraph(vert, edgy, crd);
+        {
+            auto _graph = std::shared_ptr<CoordinateGraph>(new CoordinateGraph(vert, edgy, crd));
+            graph = _graph;
+            visualizer = std::unique_ptr<CoordinateVisualizer>(
+                new CoordinateVisualizer(_graph));
+        }
+        CoordinateVisualizer* fnaa = reinterpret_cast<CoordinateVisualizer*>(visualizer.get());
+
+        for (size_t i = 0; i < graph->numVertices(); i++)
+        {
+            std::vector<CostT> cost;
+            Dijkstra(*graph, *visualizer, i, cost);
+            fnaa->wait();
+            fnaa->reset();
+            // if(visualizer)
+            //     delete visualizer;
+            // PruefeDijkstra(bspl, i, cost);
+        }
+        for (size_t i = 0; i < graph->numVertices(); i++)
+        {
+
+            for (size_t j = 0; j < graph->numVertices(); j++)
+            {
+                std::list<VertexT> weg;
+                A_star(*graph, *visualizer, i, j, weg);
+                fnaa->wait();
+                fnaa->reset();
+                // PruefeWeg(bspl, weg);
+            }
+        }
+        // delete visualizer;
     }
     else if( bspl <= 9)
     {
@@ -331,17 +326,29 @@ int main()
             stream >> ct;
             edgy.emplace_back(ct);
         }
-        graph = new LabyrinthGraph(width, height, edgy);
+        graph = std::unique_ptr<LabyrinthGraph>(new LabyrinthGraph(width, height, edgy));
+        visualizer = std::unique_ptr<MazeVisualizer>(new MazeVisualizer(width, height, edgy));
+        MazeVisualizer* fnaa = reinterpret_cast<MazeVisualizer*>(visualizer.get());
+
+        auto szpair = StartZielPaare(bspl);
+        for(auto& p: szpair)
+        {
+            std::list<VertexT> weg;
+            A_star(*graph, *visualizer, p.first, p.second, weg);
+            fnaa->wait();
+            fnaa->reset();
+            // PruefeWeg(bspl, weg);
+        }
     }
     else
     {
         for (size_t i = 0; i < 10; i++)
         {
-            size_t width = 20;
-            size_t height = 20;
+            size_t width = 100;
+            size_t height = 100;
             auto edgy = ErzeugeLabyrinth(width, height, i);
             // printG(edgy, width, height);
-            graph = new LabyrinthGraph(width, height, edgy);
+            graph = std::unique_ptr<LabyrinthGraph>(new LabyrinthGraph(width, height, edgy));
 
             VertexT start = undefinedVertex;
             VertexT end = undefinedVertex;
@@ -353,16 +360,13 @@ int main()
                 if(edgy[i] == CellType::Destination)
                 end = i;
             }
-            TextVisualizer __a;
             std::list<VertexT> weg;
-            std::cout << "calc" << '\n';
-            A_star(*graph, __a, start, end, weg);
-            std::cout << "finished" << '\n';
-            // std::cout << "Start: "  << start<< ", ENd: "  << end << '\n';
-            // for (auto& x: weg) {
-            //     std::cout << x << '\n';
-            // }
-            PruefeWeg(bspl, weg);
+            visualizer = std::unique_ptr<MazeVisualizer>(new MazeVisualizer(width, height, edgy));
+            MazeVisualizer* fnaa = reinterpret_cast<MazeVisualizer*>(visualizer.get());
+            A_star(*graph, *visualizer, start, end, weg);
+            fnaa->wait();
+            fnaa->reset();
+
             PruefeHeuristik(*graph);
             std::cout << "finished check" << '\n';
         }
@@ -374,41 +378,12 @@ int main()
 
     // Loese die in der Aufgabenstellung beschriebenen Probleme fuer die jeweilige Datei
     // PruefeDijkstra / PruefeWeg
-    if(bspl <= 4)
-    {
-        TextVisualizer __a;
-        for (size_t i = 0; i < graph->numVertices(); i++)
-        {
-            std::vector<CostT> cost;
-            Dijkstra(*graph, __a, i, cost);
-            PruefeDijkstra(bspl, i, cost);
-        }
-        for (size_t i = 0; i < graph->numVertices(); i++)
-        {
-
-            for (size_t j = 0; j < graph->numVertices(); j++)
-            {
-                std::list<VertexT> weg;
-                A_star(*graph, __a, i, j, weg);
-                PruefeWeg(bspl, weg);
-            }
-        }
-    }
-    else if(bspl <= 9)
-    {
-        auto szpair = StartZielPaare(bspl);
-        TextVisualizer __a;
-        for(auto& p: szpair)
-        {
-            std::list<VertexT> weg;
-            A_star(*graph, __a, p.first, p.second, weg);
-            PruefeWeg(bspl, weg);
-        }
-    }
 
     PruefeHeuristik(*graph);
 
-    if(graph)
-        delete(graph);
+    // if(graph)
+    //     delete graph;
+    // if(visualizer)
+    //     delete visualizer;
     return 0;
 }
