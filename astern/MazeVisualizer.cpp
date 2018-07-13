@@ -1,5 +1,7 @@
 #include "MazeVisualizer.h"
 #include <iostream>
+#include <chrono>
+#include "a_stern.h"
 
 MazeVisualizer::MazeVisualizer(
     size_t width,
@@ -106,6 +108,12 @@ void MazeVisualizer::draw()
     }
     window.display();
 
+    auto curr = std::chrono::system_clock::now();
+    auto next = std::chrono::system_clock::now();
+    while((next - curr) < std::chrono::milliseconds(WAIT_TIME))
+    {
+        next = std::chrono::system_clock::now();
+    }
     //
     // sf::CircleShape shape(100);
     // shape.setFillColor(sf::Color(100, 250, 50));

@@ -1,0 +1,1 @@
+g++ -no-pie MazeVisualizer.cpp CoordinateVisualizer.cpp a_stern.cpp unit.o -lsfml-graphics -lsfml-window -lsfml-system -std=c++11 -g

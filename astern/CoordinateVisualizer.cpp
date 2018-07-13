@@ -208,10 +208,7 @@ void CoordinateVisualizer::draw()
 
             if(estimate[i] != 0 && estimate[i] != infty)
             {
-                if(cost[i] != infty)
-                    txt.append("+" + std::to_string(estimate[i] - cost[i]).erase(5));
-                else
-                    txt.append("+" + std::to_string(estimate[i]).erase(5));
+                    txt.append("," + std::to_string(estimate[i]).erase(5));
 
             }
             text.setString(txt);

@@ -176,7 +176,6 @@ bool A_star(const DistanceGraph& g, GraphVisualizer& v, VertexT start, VertexT z
             if(est[x] < est[current])
                 current = x;
 
-        v.updateVertex(current, score[current], est[current], path[current], VertexStatus::Active);
         if(current == ziel)
         {
             v.markVertex(start, VertexStatus::Active);
@@ -196,6 +195,7 @@ bool A_star(const DistanceGraph& g, GraphVisualizer& v, VertexT start, VertexT z
             v.draw();
             return true;
         }
+        v.updateVertex(current, score[current], est[current], path[current], VertexStatus::Active);
 
         known.erase(current);
         finished.insert(current);
@@ -217,7 +217,8 @@ bool A_star(const DistanceGraph& g, GraphVisualizer& v, VertexT start, VertexT z
 
             path[nb] = current;
             score[nb] = score[current] + g.cost(current, nb);
-            est[nb] = score[nb] + g.estimatedCost(nb, ziel);
+            est[nb] = //score[nb] +
+                    g.estimatedCost(nb, ziel);
 
         }
         v.draw();
@@ -311,16 +312,16 @@ int main()
         }
         CoordinateVisualizer* fnaa = reinterpret_cast<CoordinateVisualizer*>(visualizer.get());
 
-        // for (size_t i = 0; i < graph->numVertices(); i++)
-        // {
-        //     std::vector<CostT> cost;
-        //     Dijkstra(*graph, *visualizer, i, cost);
-        //     fnaa->wait();
-        //     fnaa->reset();
-        //     // if(visualizer)
-        //     //     delete visualizer;
-        //     // PruefeDijkstra(bspl, i, cost);
-        // }
+        for (size_t i = 0; i < graph->numVertices(); i++)
+        {
+            std::vector<CostT> cost;
+            Dijkstra(*graph, *visualizer, i, cost);
+            fnaa->wait();
+            fnaa->reset();
+            // if(visualizer)
+            //     delete visualizer;
+            // PruefeDijkstra(bspl, i, cost);
+        }
         for (size_t i = 0; i < graph->numVertices(); i++)
         {
 
@@ -367,8 +368,8 @@ int main()
     {
         for (size_t i = 0; i < 10; i++)
         {
-            size_t width = 100;
-            size_t height = 100;
+            size_t width = 50;
+            size_t height = 50;
             auto edgy = ErzeugeLabyrinth(width, height, i);
             // printG(edgy, width, height);
             graph = std::unique_ptr<LabyrinthGraph>(new LabyrinthGraph(width, height, edgy));

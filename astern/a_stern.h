@@ -2,7 +2,7 @@
 #include "unit.h"
 #include <cmath>
 
-#define WAIT_TIME 500
+#define WAIT_TIME 10
 
 // Ein Graph, der Koordinaten von Knoten speichert.
 class CoordinateGraph : public DistanceGraph {
